@@ -1,0 +1,96 @@
+<!-- Author: Judah Owen -->
+<!-- Edited by: (editor name)-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlanA - Edit Database</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <button class="about-btn" onclick="goToAbout()">About</button>
+
+    <div class="edit-page-wrapper">
+
+        <header class="edit-header">
+            <img src="logo.png" alt="PlanA Logo" class="logo">
+        </header>
+
+        <main class="edit-layout">
+
+            <section class="edit-main-panel">
+                <div class="edit-panel-header">
+                    <h2>Edit Database</h2>
+                    <p>Add users, stations, and buses for the prototype database.</p>
+                </div>
+
+                <div class="edit-grid">
+
+                    <!-- Add User -->
+                    <div class="edit-card">
+                        <h3>Add User</h3>
+                        <input type="text" id="editUsername" placeholder="Username">
+                        <input type="password" id="editPassword" placeholder="Password">
+                        <select id="editUserRole">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <button onclick="addUserFromAdmin()">Add User</button>
+                        <p id="editUserMessage" class="form-message"></p>
+                    </div>
+
+                    <!-- Add Station -->
+                    <div class="edit-card">
+                        <h3>Add Station</h3>
+                        <input type="text" id="stationName" placeholder="Station Name">
+                        <input type="text" id="stationStatus" placeholder="Status">
+                        <input type="text" id="stationLocation" placeholder="Location">
+                        <button onclick="addStation()">Add Station</button>
+                        <p id="stationMessage" class="form-message"></p>
+                    </div>
+
+                    <!-- Add Bus -->
+                    <div class="edit-card">
+                        <h3>Add Bus</h3>
+                        <input type="text" id="busName" placeholder="Bus Name">
+                        <input type="text" id="busRoute" placeholder="Route">
+                        <input type="text" id="busStatus" placeholder="Status">
+                        <button onclick="addBus()">Add Bus</button>
+                        <p id="busMessage" class="form-message"></p>
+                    </div>
+
+                    <!-- Prototype Status -->
+                    <div class="edit-card">
+                        <h3>Prototype Storage</h3>
+                        <p><strong>Users:</strong> localStorage</p>
+                        <p><strong>Stations:</strong> localStorage</p>
+                        <p><strong>Buses:</strong> localStorage</p>
+                        <p class="dev-note">
+                            These forms are structured so they can later be replaced with Firebase create/write functions.
+                        </p>
+                    </div>
+
+                </div>
+            </section>
+
+            <aside class="edit-side-panel">
+                <h2>Navigation</h2>
+                <button class="side-btn" onclick="goToAdmin()">Back to Admin</button>
+                <button class="side-btn" onclick="goToMain()">Back to Main</button>
+                <button class="side-btn" onclick="goToLogin()">Back to Login</button>
+
+                <div class="mini-card">
+                    <h3>Reminder</h3>
+                    <p>Travel Plan is local and separate.</p>
+                    <p>Users, stations, and buses are the pieces intended for Firebase later.</p>
+                </div>
+            </aside>
+
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
