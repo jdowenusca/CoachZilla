@@ -1,5 +1,28 @@
 //Author: Judah Owen
 //Edited by: (editor name)
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyArSEe1C58SRhosnESKcKGfUAyjWvnc_lQ",
+  authDomain: "coachzilla-565ed.firebaseapp.com",
+  projectId: "coachzilla-565ed",
+  storageBucket: "coachzilla-565ed.firebasestorage.app",
+  messagingSenderId: "299534468128",
+  appId: "1:299534468128:web:18c373867c67628c826845",
+  measurementId: "G-G7ZYE1CJHY"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
 function login() {
     const usernameInput = document.getElementById("username");
     const passwordInput = document.getElementById("password");
