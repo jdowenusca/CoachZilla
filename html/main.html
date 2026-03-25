@@ -1,0 +1,74 @@
+<!-- Author: Judah Owen -->
+<!-- Edited by: (editor name)-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlanA - Main Page</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+    <button class="about-btn" onclick="goToAbout()">About</button>
+
+    <div class="main-page-wrapper">
+
+        <!-- Top Header -->
+        <header class="main-header">
+            <h1 class="logo-text">PlanA</h1>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard-layout">
+
+            <!-- Left Side: Station/Bus Info -->
+            <section class="info-panel">
+                <h2>Campus Transit Info</h2>
+
+                <div class="info-card" onclick="toggleStationDetails()">
+                    <h3>On-Campus Bus Stop</h3>
+                    <p><strong>Bus Route:</strong> Green Line</p>
+                    <p><strong>Status:</strong> Active</p>
+                    <p><strong>Location:</strong> Main Campus Loop</p>
+                    <p class="click-note">Click for more details</p>
+                </div>
+
+                <div id="station-details" class="station-details hidden">
+                    <h3>Station Details</h3>
+                    <p><strong>Station Name:</strong> Campus Main Stop</p>
+                    <p><strong>Nearby Landmark:</strong> Student Center</p>
+                    <p><strong>Hours:</strong> 7:00 AM - 8:00 PM</p>
+                    <p><strong>Notes:</strong> This is placeholder data for now.</p>
+                </div>
+            </section>
+
+            <!-- Center: Map Placeholder -->
+            <section class="map-section">
+                <div class="map-placeholder">
+                    <div class="map-label">Google Maps API Placeholder</div>
+                    <div class="mock-marker" onclick="toggleStationDetails()">
+                        Bus Stop
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Side: Extra Quick Info -->
+            <aside class="side-panel">
+                <h2>Quick Actions</h2>
+                <button class="side-btn" onclick="goToSearch()">Search Routes</button>
+                <button class="side-btn" onclick="goToTravelPlan()">View Travel Plan</button>
+
+                <div class="mini-card">
+                    <h3>Default View</h3>
+                    <p>Map centered on campus</p>
+                    <p>Bus stop marker shown by default</p>
+                </div>
+            </aside>
+
+        </main>
+    </div>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

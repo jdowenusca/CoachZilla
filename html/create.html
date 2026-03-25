@@ -1,0 +1,39 @@
+<!-- Author: Judah Owen -->
+<!-- Edited by: (editor name)-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlanA - Create Account</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+    <button class="about-btn" onclick="goToAbout()">About</button>
+
+    <div class="container">
+
+        <!-- Logo -->
+        <h1 class="logo-text">PlanA</h1>
+
+        <!-- Create Account Box -->
+        <div class="login-box">
+            <h2>Create Account</h2>
+
+            <input type="text" id="newUsername" placeholder="Username">
+            <input type="password" id="newPassword" placeholder="Password">
+
+            <div class="button-group">
+                <button onclick="createAccount()">Create</button>
+                <button onclick="goToLogin()">Back</button>
+            </div>
+
+            <p id="createMessage" class="form-message"></p>
+        </div>
+
+    </div>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>
