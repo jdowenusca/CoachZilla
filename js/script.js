@@ -1,9 +1,27 @@
 //Author: Judah Owen
 //Edited by: (editor name)
 
+//temporary add to text import functions and test data creation
+import User from "./models/User.js";
+import Bus from "./models/Bus.js";
+import BusStation from "./models/BusStation.js";
+import RefuelStation from "./models/RefuelStation.js";
+
+const testUser = new User(1, "admin", "admin123", "admin");
+const testBus = new Bus(101, "Ford", "Transit", "Passenger", "Gasoline", 25, 0.2, 65);
+const testBusStation = new BusStation(201, "Downtown Station", 33.5007, -81.9998);
+const testRefuelStation = new RefuelStation(301, "Fuel Stop", 33.5201, -82.0105, "Gasoline");
+
+console.log(testUser.displayInfo());
+console.log(testBus.displayInfo());
+console.log("Max Range:", testBus.calculateMaxRange());
+console.log(testBusStation.displayInfo());
+console.log(testRefuelStation.displayInfo());
+
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
