@@ -2,12 +2,14 @@
 <!-- Edited by: (editor name)-->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoachZilla - About</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
+
 <body>
 
     <button class="about-btn" onclick="goToAbout()">About</button>
@@ -61,9 +63,9 @@
             <section class="about-card">
                 <h2>Developers</h2>
                 <p><strong>Project Team:</strong></p>
-                <ul>
+                <!-- <ul>
                     <img src="devs.jpg" alt="Developers" class="dev-photo">
-                </ul>
+                </ul> -->
 
                 <p class="dev-note">
                     Developed as part of a Software Engineering course project.
@@ -72,8 +74,9 @@
 
             <!-- Navigation -->
             <div class="about-actions">
-                <button onclick="goToMain()">Back to Main</button>
-                <button onclick="goToLogin()">Back to Login</button>
+                <button id="backBtn">Back</button>
+                <button id="homeBtn">Home</button>
+                <button id="logoutBtn">Logout</button>
             </div>
 
         </main>
@@ -81,4 +84,5 @@
 
     <script type="module" src="../js/pages/aboutPage.js"></script>
 </body>
+
 </html>

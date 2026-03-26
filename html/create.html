@@ -2,15 +2,17 @@
 <!-- Edited by: (editor name)-->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoachZilla - Create Account</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
+
 <body>
 
-    <button class="about-btn" onclick="goToAbout()">About</button>
+    <button id="about-btn">About</button>
 
     <div class="container">
 
@@ -25,8 +27,8 @@
             <input type="password" id="newPassword" placeholder="Password">
 
             <div class="button-group">
-                <button onclick="createAccount()">Create</button>
-                <button onclick="goToLogin()">Back</button>
+                <button id="createBtn">Create Account</button>
+                <button id="backToLoginBtn">Back</button>
             </div>
 
             <p id="createMessage" class="form-message"></p>
@@ -36,4 +38,5 @@
 
     <script type="module" src="../js/pages/createPage.js"></script>
 </body>
+
 </html>

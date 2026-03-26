@@ -21,7 +21,7 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const user = App.accountManager.login(username, password);
+      const user = App.accountManager.validateLogin(username, password);
 
       if (user) {
         App.currentUser = user;

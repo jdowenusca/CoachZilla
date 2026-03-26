@@ -12,77 +12,24 @@
 
 <body>
 
-    <button class="about-btn" onclick="goToAbout()">About</button>
+    <h1>Admin Dashboard</h1>
 
-    <div class="admin-page-wrapper">
+    <p id="adminWelcomeMessage"></p>
 
-        <header class="admin-header">
-            <h1 class="logo-text">CoachZilla</h1>
-        </header>
-
-        <main class="admin-layout">
-
-            <section class="admin-main-panel">
-                <div class="admin-panel-header">
-                    <h2>Admin Dashboard</h2>
-                    <p>Manage users, stations, and buses.</p>
-                </div>
-
-                <div class="admin-grid">
-
-                    <!-- Users -->
-                    <div class="admin-card">
-                        <h3>Users</h3>
-                        <div id="adminUsersList" class="admin-list">
-                            <!-- Users load here -->
-                        </div>
-                    </div>
-
-                    <!-- Stations -->
-                    <div class="admin-card">
-                        <h3>Stations</h3>
-                        <div id="adminStationsList" class="admin-list">
-                            <!-- Stations load here -->
-                        </div>
-                    </div>
-
-                    <!-- Buses -->
-                    <div class="admin-card">
-                        <h3>Buses</h3>
-                        <div id="adminBusesList" class="admin-list">
-                            <!-- Buses load here -->
-                        </div>
-                    </div>
-
-                    <!-- Firebase Notes -->
-                    <div class="admin-card">
-                        <h3>Database Status</h3>
-                        <p><strong>Users:</strong> Local prototype mode</p>
-                        <p><strong>Stations:</strong> Placeholder data</p>
-                        <p><strong>Buses:</strong> Placeholder data</p>
-                        <p class="dev-note">
-                            Later this dashboard can be connected to Firebase collections for full database management.
-                        </p>
-                    </div>
-
-                </div>
-            </section>
-
-            <aside class="admin-side-panel">
-                <h2>Admin Actions</h2>
-                <button class="side-btn" onclick="goToEdit()">Edit Database</button>
-                <button class="side-btn" onclick="goToMain()">Back to Main</button>
-                <button class="side-btn" onclick="goToLogin()">Back to Login</button>
-
-                <div class="mini-card">
-                    <h3>Prototype Note</h3>
-                    <p>Users are currently read from localStorage.</p>
-                    <p>Stations and buses are placeholder lists for now.</p>
-                </div>
-            </aside>
-
-        </main>
+    <div class="admin-actions">
+        <button id="goEditBtn">Edit Data</button>
+        <button id="goAboutBtn">About</button>
+        <button id="logoutBtn">Logout</button>
     </div>
+
+    <h2>Users</h2>
+    <div id="adminUsersList"></div>
+
+    <h2>Buses</h2>
+    <div id="adminBusesList"></div>
+
+    <h2>Stations</h2>
+    <div id="adminStationsList"></div>
 
     <script type="module" src="../js/pages/adminPage.js"></script>
 </body>
