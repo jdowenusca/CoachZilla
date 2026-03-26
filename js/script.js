@@ -1,529 +1,547 @@
-//Author: Judah Owen
-//Edited by: (editor name)
-
-//test data
-import User from "./models/User.js";
-import Bus from "./models/Bus.js";
-import BusStation from "./models/BusStation.js";
-import RefuelStation from "./models/RefuelStation.js";
+import AccountManager from "./managers/AccountManager.js";
+import BusManager from "./managers/BusManager.js";
+import StationManager from "./managers/StationManager.js";
 import RoutePlanner from "./managers/RoutePlanner.js";
 import TravelPlanManager from "./managers/TravelPlanManager.js";
+import LeafletMapService from "./services/LeafletMapService.js";
+import {
+  qs,
+  escapeHtml,
+  setMessage,
+  clearMessage,
+  formatHoursToMinutes,
+  getPageName,
+  navigateTo,
+  readJson,
+  writeJson,
+} from "./utils/helpers.js";
 
-const testUser = new User(1, "judah", "pass123", "user");
-const testBus = new Bus(1, "Mercedes", "Tourismo", "Coach", "Diesel", 120, 2, 60);
-
-const stationA = new BusStation(1, "USCA", 33.498, -81.968, "Campus Stop");
-const stationB = new BusStation(2, "Augusta Hub", 33.4735, -82.0105, "City Stop");
-const stationC = new BusStation(3, "Columbia Hub", 34.0007, -81.0348, "City Stop");
-const fuelStop = new RefuelStation(4, "Diesel Station", 33.7000, -81.5000, "Diesel");
-
+const accountManager = new AccountManager();
+const busManager = new BusManager();
+const stationManager = new StationManager();
 const routePlanner = new RoutePlanner();
 const travelPlanManager = new TravelPlanManager();
+const mapService = new LeafletMapService();
 
-const testRoute = routePlanner.createRoute(stationA, stationB, testBus, [fuelStop]);
-console.log("Single Route:", testRoute);
+const SESSION_KEY = "coachzilla_current_user";
+const SIMPLE_TRAVEL_PLAN_KEY = "coachzilla_simple_travel_plan";
 
-const testMultiRoute = routePlanner.createMultiStopRoute(
-  [stationA, stationB, stationC],
-  testBus,
-  [fuelStop]
-);
-console.log("Multi-stop Route:", testMultiRoute);
+function seedPrototypeData() {
+  accountManager.ensureDefaultAdmin();
 
-const testPlan = travelPlanManager.createTravelPlan(
-  testUser,
-  testBus,
-  [stationA, stationB, stationC],
-  [fuelStop]
-);
-console.log("Travel Plan:", testPlan);
-console.log("Stored Plans:", travelPlanManager.getAllTravelPlans());
-//end test data
+  if (stationManager.getAllStations().length === 0) {
+    stationManager.addBusStation("Campus Main Stop", 33.498, -81.968, "Campus Stop");
+    stationManager.addBusStation("Library Transit Point", 33.4993, -81.9702, "Campus Stop");
+    stationManager.addBusStation("Downtown Connector", 33.4735, -82.0105, "City Stop");
+    stationManager.addRefuelStation("Diesel Station", 33.7, -81.5, "Diesel");
+  }
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+  if (busManager.getAllBuses().length === 0) {
+    busManager.addBus("Mercedes", "Tourismo", "Coach", "Diesel", 120, 2, 60);
+    busManager.addBus("Volvo", "9700", "Campus Shuttle", "Diesel", 90, 2.2, 48);
+    busManager.addBus("Blue Bird", "All American", "Regional", "Diesel", 110, 2.4, 55);
+  }
+}
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyArSEe1C58SRhosnESKcKGfUAyjWvnc_lQ",
-  authDomain: "coachzilla-565ed.firebaseapp.com",
-  projectId: "coachzilla-565ed",
-  storageBucket: "coachzilla-565ed.firebasestorage.app",
-  messagingSenderId: "299534468128",
-  appId: "1:299534468128:web:18c373867c67628c826845",
-  measurementId: "G-G7ZYE1CJHY"
-};
+function getCurrentUser() {
+  return readJson(SESSION_KEY, null);
+}
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+function setCurrentUser(user) {
+  writeJson(SESSION_KEY, user);
+}
+
+function getSimpleTravelPlan() {
+  return readJson(SIMPLE_TRAVEL_PLAN_KEY, []);
+}
+
+function saveSimpleTravelPlan(plan) {
+  writeJson(SIMPLE_TRAVEL_PLAN_KEY, plan);
+}
 
 function login() {
-    const usernameInput = document.getElementById("username");
-    const passwordInput = document.getElementById("password");
+  const username = qs("#username")?.value.trim() || "";
+  const password = qs("#password")?.value.trim() || "";
 
-    if (!usernameInput || !passwordInput) return;
+  if (!username || !password) {
+    alert("Please enter both username and password.");
+    return;
+  }
 
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value.trim();
+  const user = accountManager.validateLogin(username, password);
 
-    let users = JSON.parse(localStorage.getItem("users")) || [];
+  if (!user) {
+    alert("Invalid username or password.");
+    return;
+  }
 
-    const foundUser = users.find(user =>
-        user.username === username && user.password === password
-    );
+  setCurrentUser({
+    userID: user.getUserID(),
+    username: user.getUsername(),
+    role: user.getRole(),
+  });
 
-    if (!foundUser) {
-        alert("Invalid username or password.");
-        return;
-    }
-
-    // Save current user session (for later use)
-    localStorage.setItem("currentUser", JSON.stringify(foundUser));
-
-    if (foundUser.role === "admin") {
-        window.location.href = "admin.html";
-    } else {
-        window.location.href = "main.html";
-    }
-}
-
-function goToCreate() {
-    window.location.href = "create.html";
-}
-
-function goToAbout() {
-    window.location.href = "about.html";
-}
-
-function goToSearch() {
-    window.location.href = "search.html";
-}
-
-function goToTravelPlan() {
-    window.location.href = "travel.html";
-}
-
-function toggleStationDetails() {
-    const details = document.getElementById("station-details");
-    details.classList.toggle("hidden");
-}
-
-function goToMain() {
-    window.location.href = "main.html";
-}
-
-function goToLogin() {
-    window.location.href = "index.html";
-}
-
-function searchRoutes() {
-    const searchInput = document.getElementById("citySearch").value.trim();
-
-    if (searchInput === "") {
-        alert("Please enter a city or station name.");
-        return;
-    }
-
-    alert("Search feature is in prototype mode. Showing placeholder route results for: " + searchInput);
-}
-
-function addToTravelPlan(stopName) {
-    let travelPlan = JSON.parse(localStorage.getItem("travelPlan")) || [];
-    travelPlan.push(stopName);
-    localStorage.setItem("travelPlan", JSON.stringify(travelPlan));
-    updateTravelPlanPreview();
-}
-
-function updateTravelPlanPreview() {
-    const previewBox = document.getElementById("travelPlanPreview");
-    if (!previewBox) return;
-
-    let travelPlan = JSON.parse(localStorage.getItem("travelPlan")) || [];
-
-    if (travelPlan.length === 0) {
-        previewBox.innerHTML = "<p>No stops added yet.</p>";
-        return;
-    }
-
-    previewBox.innerHTML = "";
-    travelPlan.forEach((stop, index) => {
-        const stopItem = document.createElement("p");
-        stopItem.textContent = (index + 1) + ". " + stop;
-        previewBox.appendChild(stopItem);
-    });
-}
-
-function renderTravelPlan() {
-    const travelPlanList = document.getElementById("travelPlanList");
-    if (!travelPlanList) return;
-
-    let travelPlan = JSON.parse(localStorage.getItem("travelPlan")) || [];
-
-    if (travelPlan.length === 0) {
-        travelPlanList.innerHTML = `
-            <div class="empty-plan-message">
-                <p>Your travel plan is currently empty.</p>
-                <p>Go to the Search page to add stops.</p>
-            </div>
-        `;
-        return;
-    }
-
-    travelPlanList.innerHTML = "";
-
-    travelPlan.forEach((stop, index) => {
-        const travelItem = document.createElement("div");
-        travelItem.className = "travel-plan-item";
-
-        travelItem.innerHTML = `
-            <div class="travel-stop-info">
-                <h3>Stop ${index + 1}</h3>
-                <p><strong>Station:</strong> ${stop}</p>
-                <p><strong>Status:</strong> Planned</p>
-                <p><strong>Source:</strong> Local travel plan</p>
-            </div>
-            <button class="remove-btn" onclick="removeTravelStop(${index})">Remove</button>
-        `;
-
-        travelPlanList.appendChild(travelItem);
-    });
-}
-
-function removeTravelStop(index) {
-    let travelPlan = JSON.parse(localStorage.getItem("travelPlan")) || [];
-    travelPlan.splice(index, 1);
-    localStorage.setItem("travelPlan", JSON.stringify(travelPlan));
-    renderTravelPlan();
-    updateTravelPlanPreview();
-}
-
-function clearTravelPlan() {
-    localStorage.removeItem("travelPlan");
-    renderTravelPlan();
-    updateTravelPlanPreview();
+  navigateTo(user.getRole().toLowerCase() === "admin" ? "admin.html" : "main.html");
 }
 
 function createAccount() {
-    const usernameInput = document.getElementById("newUsername");
-    const passwordInput = document.getElementById("newPassword");
-    const message = document.getElementById("createMessage");
+  const usernameInput = qs("#newUsername");
+  const passwordInput = qs("#newPassword");
+  const message = qs("#createMessage");
 
-    if (!usernameInput || !passwordInput || !message) return;
+  const username = usernameInput?.value.trim() || "";
+  const password = passwordInput?.value.trim() || "";
 
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value.trim();
+  if (!username || !password) {
+    setMessage(message, "Please fill in all fields.", true);
+    return;
+  }
 
-    if (username === "" || password === "") {
-        message.textContent = "Please fill in all fields.";
-        return;
-    }
+  const newUser = accountManager.addUser(username, password, "user");
 
-    let users = JSON.parse(localStorage.getItem("users")) || [];
+  if (!newUser) {
+    setMessage(message, "Username already exists.", true);
+    return;
+  }
 
-    // Check if username already exists
-    const userExists = users.some(user => user.username === username);
+  setMessage(message, "Account created successfully. Redirecting...");
+  usernameInput.value = "";
+  passwordInput.value = "";
 
-    if (userExists) {
-        message.textContent = "Username already exists.";
-        return;
-    }
-
-    // Add new user
-    const newUser = {
-        username: username,
-        password: password,
-        role: "user"
-    };
-
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
-
-    message.textContent = "Account created successfully! Redirecting...";
-
-    // Redirect after short delay
-    setTimeout(() => {
-        window.location.href = "index.html";
-    }, 1200);
+  setTimeout(() => navigateTo("index.html"), 1000);
 }
 
-function goToEdit() {
-    window.location.href = "edit.html";
+function toggleStationDetails() {
+  const details = qs("#station-details");
+  if (details) {
+    details.classList.toggle("hidden");
+  }
+}
+
+function searchRoutes() {
+  renderSearchResults(qs("#citySearch")?.value.trim() || "");
+}
+
+function addToTravelPlan(stopName) {
+  const currentPlan = getSimpleTravelPlan();
+  currentPlan.push(stopName);
+  saveSimpleTravelPlan(currentPlan);
+  updateTravelPlanPreview();
+  renderTravelPlan();
+}
+
+function removeTravelStop(index) {
+  const currentPlan = getSimpleTravelPlan();
+  currentPlan.splice(index, 1);
+  saveSimpleTravelPlan(currentPlan);
+  updateTravelPlanPreview();
+  renderTravelPlan();
+}
+
+function clearTravelPlan() {
+  localStorage.removeItem(SIMPLE_TRAVEL_PLAN_KEY);
+  updateTravelPlanPreview();
+  renderTravelPlan();
+}
+
+function updateTravelPlanPreview() {
+  const previewBox = qs("#travelPlanPreview");
+  if (!previewBox) return;
+
+  const currentPlan = getSimpleTravelPlan();
+
+  if (!currentPlan.length) {
+    previewBox.innerHTML = "<p>No stops added yet.</p>";
+    return;
+  }
+
+  previewBox.innerHTML = currentPlan
+    .map((stop, index) => `<p>${index + 1}. ${escapeHtml(stop)}</p>`)
+    .join("");
+}
+
+function renderTravelPlan() {
+  const travelPlanList = qs("#travelPlanList");
+  if (!travelPlanList) return;
+
+  const currentPlan = getSimpleTravelPlan();
+
+  if (!currentPlan.length) {
+    travelPlanList.innerHTML = `
+      <div class="empty-plan-message">
+        <p>Your travel plan is currently empty.</p>
+        <p>Go to the Search page to add stops.</p>
+      </div>
+    `;
+    return;
+  }
+
+  travelPlanList.innerHTML = currentPlan
+    .map(
+      (stop, index) => `
+        <div class="travel-plan-item">
+          <div class="travel-stop-info">
+            <h3>Stop ${index + 1}</h3>
+            <p><strong>Station:</strong> ${escapeHtml(stop)}</p>
+            <p><strong>Status:</strong> Planned</p>
+            <p><strong>Source:</strong> Local travel plan</p>
+          </div>
+          <button class="remove-btn" onclick="removeTravelStop(${index})">Remove</button>
+        </div>
+      `
+    )
+    .join("");
+}
+
+function renderSearchResults(searchTerm = "") {
+  const resultsList = qs(".results-list");
+  if (!resultsList) return;
+
+  const busStations = stationManager.getAllBusStations();
+  const filteredStations = !searchTerm
+    ? busStations
+    : busStations.filter((station) => {
+        const name = station.getName().toLowerCase();
+        const type = station.getStationType().toLowerCase();
+        const query = searchTerm.toLowerCase();
+        return name.includes(query) || type.includes(query);
+      });
+
+  if (!filteredStations.length) {
+    resultsList.innerHTML = `
+      <div class="result-card">
+        <h3>No matching stations</h3>
+        <p>Try another city or station name.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const defaultBus = busManager.getAllBuses()[0];
+  const anchorStation = filteredStations[0];
+
+  resultsList.innerHTML = filteredStations
+    .map((station) => {
+      const distance = routePlanner.calculateDistance(
+        anchorStation.getLatitude(),
+        anchorStation.getLongitude(),
+        station.getLatitude(),
+        station.getLongitude()
+      );
+
+      const travelTime = defaultBus
+        ? routePlanner.calculateTravelTime(distance, defaultBus.getCruiseSpeed())
+        : 0;
+
+      const heading =
+        station.getID() === anchorStation.getID()
+          ? "Local Loop"
+          : `${routePlanner.calculateHeading(
+              anchorStation.getLatitude(),
+              anchorStation.getLongitude(),
+              station.getLatitude(),
+              station.getLongitude()
+            )}°`;
+
+      return `
+        <div class="result-card">
+          <h3>${escapeHtml(station.getName())}</h3>
+          <p><strong>Distance:</strong> ${distance.toFixed(2)} miles</p>
+          <p><strong>Time:</strong> ${formatHoursToMinutes(travelTime)}</p>
+          <p><strong>Heading:</strong> ${escapeHtml(heading)}</p>
+          <button onclick="addToTravelPlan('${escapeHtml(station.getName())}')">Add</button>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function renderAdminUsers() {
-    const usersList = document.getElementById("adminUsersList");
-    if (!usersList) return;
+  const usersList = qs("#adminUsersList");
+  if (!usersList) return;
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+  const users = accountManager.getAllUsers();
 
-    if (users.length === 0) {
-        usersList.innerHTML = `
-            <div class="admin-empty-message">
-                <p>No users found.</p>
-            </div>
-        `;
-        return;
-    }
+  if (!users.length) {
+    usersList.innerHTML = `<div class="admin-empty-message"><p>No users found.</p></div>`;
+    return;
+  }
 
-    usersList.innerHTML = "";
-
-    users.forEach((user, index) => {
-        const userItem = document.createElement("div");
-        userItem.className = "admin-list-item";
-
-        userItem.innerHTML = `
-            <div>
-                <p><strong>${user.username}</strong></p>
-                <p>Role: ${user.role}</p>
-            </div>
-            <button onclick="removeUser(${index})">Remove</button>
-        `;
-
-        usersList.appendChild(userItem);
-    });
+  usersList.innerHTML = users
+    .map(
+      (user) => `
+        <div class="admin-list-item">
+          <div>
+            <p><strong>${escapeHtml(user.getUsername())}</strong></p>
+            <p>Role: ${escapeHtml(user.getRole())}</p>
+            <p>ID: ${user.getUserID()}</p>
+          </div>
+          <button onclick="removeUser(${user.getUserID()})">Remove</button>
+        </div>
+      `
+    )
+    .join("");
 }
 
-function removeUser(index) {
-    let users = JSON.parse(localStorage.getItem("users")) || [];
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+function removeUser(userID) {
+  const currentUser = getCurrentUser();
+  if (currentUser && Number(currentUser.userID) === Number(userID)) {
+    alert("You cannot remove the currently logged-in user.");
+    return;
+  }
 
-    if (currentUser && users[index] && users[index].username === currentUser.username) {
-        alert("You cannot remove the currently logged-in user.");
-        return;
-    }
-
-    users.splice(index, 1);
-    localStorage.setItem("users", JSON.stringify(users));
-    renderAdminUsers();
-}
-
-function initializeDefaultAdmin() {
-    let users = JSON.parse(localStorage.getItem("users")) || [];
-
-    // Remove any existing admin accounts
-    users = users.filter(user => user.role !== "admin");
-
-    // Add fresh default admin
-    const defaultAdmin = {
-        username: "admin",
-        password: "admin",
-        role: "admin"
-    };
-
-    users.unshift(defaultAdmin); // put admin at the top
-
-    localStorage.setItem("users", JSON.stringify(users));
-
-    console.log("Admin account reset and ensured.");
-}
-
-function goToAdmin() {
-    window.location.href = "admin.html";
-}
-
-function addUserFromAdmin() {
-    const usernameInput = document.getElementById("editUsername");
-    const passwordInput = document.getElementById("editPassword");
-    const roleInput = document.getElementById("editUserRole");
-    const message = document.getElementById("editUserMessage");
-
-    if (!usernameInput || !passwordInput || !roleInput || !message) return;
-
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value.trim();
-    const role = roleInput.value;
-
-    if (username === "" || password === "") {
-        message.textContent = "Please fill in all user fields.";
-        return;
-    }
-
-    let users = JSON.parse(localStorage.getItem("users")) || [];
-
-    const userExists = users.some(user => user.username === username);
-
-    if (userExists) {
-        message.textContent = "That username already exists.";
-        return;
-    }
-
-    users.push({
-        username: username,
-        password: password,
-        role: role
-    });
-
-    localStorage.setItem("users", JSON.stringify(users));
-
-    message.textContent = "User added successfully.";
-
-    usernameInput.value = "";
-    passwordInput.value = "";
-    roleInput.value = "user";
-}
-
-function addStation() {
-    const nameInput = document.getElementById("stationName");
-    const statusInput = document.getElementById("stationStatus");
-    const locationInput = document.getElementById("stationLocation");
-    const message = document.getElementById("stationMessage");
-
-    if (!nameInput || !statusInput || !locationInput || !message) return;
-
-    const name = nameInput.value.trim();
-    const status = statusInput.value.trim();
-    const location = locationInput.value.trim();
-
-    if (name === "" || status === "" || location === "") {
-        message.textContent = "Please fill in all station fields.";
-        return;
-    }
-
-    let stations = JSON.parse(localStorage.getItem("stations")) || [];
-
-    stations.push({
-        name: name,
-        status: status,
-        location: location
-    });
-
-    localStorage.setItem("stations", JSON.stringify(stations));
-
-    message.textContent = "Station added successfully.";
-
-    nameInput.value = "";
-    statusInput.value = "";
-    locationInput.value = "";
-}
-
-function addBus() {
-    const nameInput = document.getElementById("busName");
-    const routeInput = document.getElementById("busRoute");
-    const statusInput = document.getElementById("busStatus");
-    const message = document.getElementById("busMessage");
-
-    if (!nameInput || !routeInput || !statusInput || !message) return;
-
-    const name = nameInput.value.trim();
-    const route = routeInput.value.trim();
-    const status = statusInput.value.trim();
-
-    if (name === "" || route === "" || status === "") {
-        message.textContent = "Please fill in all bus fields.";
-        return;
-    }
-
-    let buses = JSON.parse(localStorage.getItem("buses")) || [];
-
-    buses.push({
-        name: name,
-        route: route,
-        status: status
-    });
-
-    localStorage.setItem("buses", JSON.stringify(buses));
-
-    message.textContent = "Bus added successfully.";
-
-    nameInput.value = "";
-    routeInput.value = "";
-    statusInput.value = "";
+  accountManager.removeUser(userID);
+  renderAdminUsers();
 }
 
 function renderAdminStations() {
-    const stationsList = document.getElementById("adminStationsList");
-    if (!stationsList) return;
+  const stationsList = qs("#adminStationsList");
+  if (!stationsList) return;
 
-    const stations = JSON.parse(localStorage.getItem("stations")) || [];
+  const stations = stationManager.getAllStations();
 
-    if (stations.length === 0) {
-        stationsList.innerHTML = `
-            <div class="admin-empty-message">
-                <p>No stations found.</p>
-            </div>
-        `;
-        return;
-    }
+  if (!stations.length) {
+    stationsList.innerHTML = `<div class="admin-empty-message"><p>No stations found.</p></div>`;
+    return;
+  }
 
-    stationsList.innerHTML = "";
+  stationsList.innerHTML = stations
+    .map((station) => {
+      const extraLine = typeof station.getFuelType === "function"
+        ? `Fuel Type: ${escapeHtml(station.getFuelType())}`
+        : `Type: ${escapeHtml(station.getStationType())}`;
 
-    stations.forEach((station, index) => {
-        const stationItem = document.createElement("div");
-        stationItem.className = "admin-list-item";
-
-        stationItem.innerHTML = `
-            <div>
-                <p><strong>${station.name}</strong></p>
-                <p>Status: ${station.status}</p>
-                <p>Location: ${station.location}</p>
-            </div>
-            <button onclick="removeStation(${index})">Remove</button>
-        `;
-
-        stationsList.appendChild(stationItem);
-    });
+      return `
+        <div class="admin-list-item">
+          <div>
+            <p><strong>${escapeHtml(station.getName())}</strong></p>
+            <p>${extraLine}</p>
+            <p>Coords: ${station.getLatitude()}, ${station.getLongitude()}</p>
+          </div>
+          <button onclick="removeStation(${station.getID()})">Remove</button>
+        </div>
+      `;
+    })
+    .join("");
 }
 
-function removeStation(index) {
-    let stations = JSON.parse(localStorage.getItem("stations")) || [];
-    stations.splice(index, 1);
-    localStorage.setItem("stations", JSON.stringify(stations));
-    renderAdminStations();
+function removeStation(stationID) {
+  stationManager.removeStation(stationID);
+  renderAdminStations();
+  renderSearchResults();
 }
 
 function renderAdminBuses() {
-    const busesList = document.getElementById("adminBusesList");
-    if (!busesList) return;
+  const busesList = qs("#adminBusesList");
+  if (!busesList) return;
 
-    const buses = JSON.parse(localStorage.getItem("buses")) || [];
+  const buses = busManager.getAllBuses();
 
-    if (buses.length === 0) {
-        busesList.innerHTML = `
-            <div class="admin-empty-message">
-                <p>No buses found.</p>
-            </div>
-        `;
-        return;
-    }
+  if (!buses.length) {
+    busesList.innerHTML = `<div class="admin-empty-message"><p>No buses found.</p></div>`;
+    return;
+  }
 
-    busesList.innerHTML = "";
+  busesList.innerHTML = buses
+    .map(
+      (bus) => `
+        <div class="admin-list-item">
+          <div>
+            <p><strong>${escapeHtml(`${bus.getMake()} ${bus.getModel()}`)}</strong></p>
+            <p>Type: ${escapeHtml(bus.getType())}</p>
+            <p>Fuel: ${escapeHtml(bus.getFuelType())}</p>
+          </div>
+          <button onclick="removeBus(${bus.getID()})">Remove</button>
+        </div>
+      `
+    )
+    .join("");
+}
 
-    buses.forEach((bus, index) => {
-        const busItem = document.createElement("div");
-        busItem.className = "admin-list-item";
+function removeBus(busID) {
+  busManager.removeBus(busID);
+  renderAdminBuses();
+}
 
-        busItem.innerHTML = `
-            <div>
-                <p><strong>${bus.name}</strong></p>
-                <p>Route: ${bus.route}</p>
-                <p>Status: ${bus.status}</p>
-            </div>
-            <button onclick="removeBus(${index})">Remove</button>
-        `;
+function addUserFromAdmin() {
+  const usernameInput = qs("#editUsername");
+  const passwordInput = qs("#editPassword");
+  const roleInput = qs("#editUserRole");
+  const message = qs("#editUserMessage");
 
-        busesList.appendChild(busItem);
+  const username = usernameInput?.value.trim() || "";
+  const password = passwordInput?.value.trim() || "";
+  const role = roleInput?.value || "user";
+
+  if (!username || !password) {
+    setMessage(message, "Please fill in all user fields.", true);
+    return;
+  }
+
+  const createdUser = accountManager.addUser(username, password, role);
+
+  if (!createdUser) {
+    setMessage(message, "That username already exists.", true);
+    return;
+  }
+
+  setMessage(message, "User added successfully.");
+  usernameInput.value = "";
+  passwordInput.value = "";
+  roleInput.value = "user";
+}
+
+function addStation() {
+  const nameInput = qs("#stationName");
+  const statusInput = qs("#stationStatus");
+  const locationInput = qs("#stationLocation");
+  const message = qs("#stationMessage");
+
+  const name = nameInput?.value.trim() || "";
+  const stationType = statusInput?.value.trim() || "";
+  const locationText = locationInput?.value.trim() || "";
+
+  if (!name || !stationType || !locationText) {
+    setMessage(message, "Please fill in all station fields.", true);
+    return;
+  }
+
+  const [latitudeText = "33.5000", longitudeText = "-81.9700"] = locationText.split(",");
+  const latitude = Number(latitudeText.trim());
+  const longitude = Number(longitudeText.trim());
+
+  if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+    setMessage(message, 'Location must be entered like "33.5000, -81.9700".', true);
+    return;
+  }
+
+  stationManager.addBusStation(name, latitude, longitude, stationType);
+  setMessage(message, "Station added successfully.");
+  nameInput.value = "";
+  statusInput.value = "";
+  locationInput.value = "";
+}
+
+function addBus() {
+  const nameInput = qs("#busName");
+  const routeInput = qs("#busRoute");
+  const statusInput = qs("#busStatus");
+  const message = qs("#busMessage");
+
+  const make = nameInput?.value.trim() || "";
+  const model = routeInput?.value.trim() || "";
+  const type = statusInput?.value.trim() || "";
+
+  if (!make || !model || !type) {
+    setMessage(message, "Please fill in all bus fields.", true);
+    return;
+  }
+
+  busManager.addBus(make, model, type, "Diesel", 100, 2, 55);
+  setMessage(message, "Bus added successfully.");
+  nameInput.value = "";
+  routeInput.value = "";
+  statusInput.value = "";
+}
+
+function renderMainDashboard() {
+  const busStations = stationManager.getAllBusStations();
+  const buses = busManager.getAllBuses();
+  const details = qs("#station-details");
+  const infoCard = qs(".info-card");
+  const quickCard = qs(".mini-card");
+  const mapContainer = qs(".map-placeholder");
+
+  if (!busStations.length) return;
+
+  const primaryStation = busStations[0];
+  const defaultBus = buses[0];
+
+  if (infoCard) {
+    infoCard.innerHTML = `
+      <h3>${escapeHtml(primaryStation.getName())}</h3>
+      <p><strong>Bus Route:</strong> ${escapeHtml(defaultBus ? defaultBus.getModel() : "Not assigned")}</p>
+      <p><strong>Status:</strong> Active</p>
+      <p><strong>Location:</strong> ${primaryStation.getLatitude()}, ${primaryStation.getLongitude()}</p>
+      <p class="click-note">Click for more details</p>
+    `;
+  }
+
+  if (details) {
+    details.innerHTML = `
+      <h3>Station Details</h3>
+      <p><strong>Station Name:</strong> ${escapeHtml(primaryStation.getName())}</p>
+      <p><strong>Station Type:</strong> ${escapeHtml(primaryStation.getStationType())}</p>
+      <p><strong>Latitude:</strong> ${primaryStation.getLatitude()}</p>
+      <p><strong>Longitude:</strong> ${primaryStation.getLongitude()}</p>
+      <p><strong>Notes:</strong> Prototype data powered by StationManager.</p>
+    `;
+  }
+
+  if (quickCard) {
+    quickCard.innerHTML = `
+      <h3>Default View</h3>
+      <p>${busStations.length} station(s) available</p>
+      <p>${buses.length} bus(es) in local storage</p>
+    `;
+  }
+
+  mapService.renderStationMap(mapContainer, busStations);
+}
+
+function maybeCreatePrototypeTravelPlan() {
+  const pageName = getPageName();
+  if (pageName !== "travel.html") return;
+
+  const currentUser = getCurrentUser();
+  const stations = stationManager.getAllBusStations();
+  const buses = busManager.getAllBuses();
+
+  if (!currentUser || stations.length < 2 || !buses.length) return;
+  if (travelPlanManager.getTravelPlansByUser(currentUser.userID).length > 0) return;
+
+  travelPlanManager.createTravelPlan(currentUser, buses[0], stations.slice(0, 2), stationManager.getAllRefuelStations());
+}
+
+function initializePage() {
+  seedPrototypeData();
+  maybeCreatePrototypeTravelPlan();
+  updateTravelPlanPreview();
+  renderTravelPlan();
+  renderAdminUsers();
+  renderAdminStations();
+  renderAdminBuses();
+  renderSearchResults();
+  renderMainDashboard();
+
+  const searchInput = qs("#citySearch");
+  if (searchInput) {
+    searchInput.addEventListener("input", (event) => {
+      renderSearchResults(event.target.value.trim());
     });
+  }
 }
 
-function removeBus(index) {
-    let buses = JSON.parse(localStorage.getItem("buses")) || [];
-    buses.splice(index, 1);
-    localStorage.setItem("buses", JSON.stringify(buses));
-    renderAdminBuses();
-}
+window.login = login;
+window.createAccount = createAccount;
+window.toggleStationDetails = toggleStationDetails;
+window.searchRoutes = searchRoutes;
+window.addToTravelPlan = addToTravelPlan;
+window.removeTravelStop = removeTravelStop;
+window.clearTravelPlan = clearTravelPlan;
+window.removeUser = removeUser;
+window.removeStation = removeStation;
+window.removeBus = removeBus;
+window.addUserFromAdmin = addUserFromAdmin;
+window.addStation = addStation;
+window.addBus = addBus;
+window.goToCreate = () => navigateTo("create.html");
+window.goToAbout = () => navigateTo("about.html");
+window.goToSearch = () => navigateTo("search.html");
+window.goToTravelPlan = () => navigateTo("travel.html");
+window.goToMain = () => navigateTo("main.html");
+window.goToLogin = () => navigateTo("index.html");
+window.goToEdit = () => navigateTo("edit.html");
+window.goToAdmin = () => navigateTo("admin.html");
 
-window.onload = function () {
-    initializeDefaultAdmin();
-
-    updateTravelPlanPreview();
-    renderTravelPlan();
-    renderAdminUsers();
-    renderAdminStations();
-    renderAdminBuses();
-};
+document.addEventListener("DOMContentLoaded", initializePage);
