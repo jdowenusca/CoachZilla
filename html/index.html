@@ -2,14 +2,16 @@
 <!-- Edited by: (editor name)-->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoachZilla - Login</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
+
 <body>
-    <button class="about-btn" onclick="goToAbout()">About</button>
+    <button id="aboutBtn">About</button>
 
     <div class="container">
 
@@ -24,14 +26,15 @@
             <input type="password" id="password" placeholder="Password">
 
             <div class="button-group">
-                <button onclick="login()">Login</button>
-                <button onclick="goToCreate()">Create Account</button>
+                <button id="loginBtn">Login</button>
+                <button id="createAccountBtn">Create Account</button>
             </div>
-            
+
         </div>
 
     </div>
 
-    <script type="module" src="js/pages/loginPage.js"></script>
+    <script type="module" src="../js/pages/loginPage.js"></script>
 </body>
+
 </html>
