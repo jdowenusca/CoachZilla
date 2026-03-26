@@ -1,22 +1,44 @@
 //Author: Judah Owen
 //Edited by: (editor name)
 
-//temporary add to text import functions and test data creation
+//test data
 import User from "./models/User.js";
 import Bus from "./models/Bus.js";
 import BusStation from "./models/BusStation.js";
 import RefuelStation from "./models/RefuelStation.js";
+import RoutePlanner from "./managers/RoutePlanner.js";
+import TravelPlanManager from "./managers/TravelPlanManager.js";
 
-const testUser = new User(1, "admin", "admin123", "admin");
-const testBus = new Bus(101, "Ford", "Transit", "Passenger", "Gasoline", 25, 0.2, 65);
-const testBusStation = new BusStation(201, "Downtown Station", 33.5007, -81.9998);
-const testRefuelStation = new RefuelStation(301, "Fuel Stop", 33.5201, -82.0105, "Gasoline");
+const testUser = new User(1, "judah", "pass123", "user");
+const testBus = new Bus(1, "Mercedes", "Tourismo", "Coach", "Diesel", 120, 2, 60);
 
-console.log(testUser.displayInfo());
-console.log(testBus.displayInfo());
-console.log("Max Range:", testBus.calculateMaxRange());
-console.log(testBusStation.displayInfo());
-console.log(testRefuelStation.displayInfo());
+const stationA = new BusStation(1, "USCA", 33.498, -81.968, "Campus Stop");
+const stationB = new BusStation(2, "Augusta Hub", 33.4735, -82.0105, "City Stop");
+const stationC = new BusStation(3, "Columbia Hub", 34.0007, -81.0348, "City Stop");
+const fuelStop = new RefuelStation(4, "Diesel Station", 33.7000, -81.5000, "Diesel");
+
+const routePlanner = new RoutePlanner();
+const travelPlanManager = new TravelPlanManager();
+
+const testRoute = routePlanner.createRoute(stationA, stationB, testBus, [fuelStop]);
+console.log("Single Route:", testRoute);
+
+const testMultiRoute = routePlanner.createMultiStopRoute(
+  [stationA, stationB, stationC],
+  testBus,
+  [fuelStop]
+);
+console.log("Multi-stop Route:", testMultiRoute);
+
+const testPlan = travelPlanManager.createTravelPlan(
+  testUser,
+  testBus,
+  [stationA, stationB, stationC],
+  [fuelStop]
+);
+console.log("Travel Plan:", testPlan);
+console.log("Stored Plans:", travelPlanManager.getAllTravelPlans());
+//end test data
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
