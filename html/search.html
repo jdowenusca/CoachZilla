@@ -2,15 +2,17 @@
 <!-- Edited by: (editor name)-->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoachZilla - Search Routes</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
+
 <body>
 
-    <button class="about-btn" onclick="goToAbout()">About</button>
+    <button id="about-btn">About</button>
 
     <div class="search-page-wrapper">
 
@@ -19,66 +21,23 @@
         </header>
 
         <main class="search-layout">
+            <h1>Search Routes</h1>
 
-            <section class="search-left-panel">
-                <h2>Search Routes</h2>
+            <div class="search-actions">
+                <button id="backHomeBtn">Home</button>
+                <button id="goTravelBtn">Travel Plan</button>
+                <button id="goAboutBtn">About</button>
+                <button id="logoutBtn">Logout</button>
+            </div>
 
-                <div class="search-bar-group">
-                    <input type="text" id="citySearch" placeholder="Enter city or station name">
-                    <button onclick="searchRoutes()">Search</button>
-                </div>
+            <input type="text" id="stationSearchInput" placeholder="Search stations by name">
 
-                <div class="results-list">
-                    <div class="result-card">
-                        <h3>Campus Main Stop</h3>
-                        <p><strong>Distance:</strong> 0.2 miles</p>
-                        <p><strong>Time:</strong> 3 minutes</p>
-                        <p><strong>Heading:</strong> North Loop</p>
-                        <button onclick="addToTravelPlan('Campus Main Stop')">Add</button>
-                    </div>
-
-                    <div class="result-card">
-                        <h3>Library Transit Point</h3>
-                        <p><strong>Distance:</strong> 0.5 miles</p>
-                        <p><strong>Time:</strong> 6 minutes</p>
-                        <p><strong>Heading:</strong> East Route</p>
-                        <button onclick="addToTravelPlan('Library Transit Point')">Add</button>
-                    </div>
-
-                    <div class="result-card">
-                        <h3>Downtown Connector</h3>
-                        <p><strong>Distance:</strong> 2.1 miles</p>
-                        <p><strong>Time:</strong> 15 minutes</p>
-                        <p><strong>Heading:</strong> South Express</p>
-                        <button onclick="addToTravelPlan('Downtown Connector')">Add</button>
-                    </div>
-                </div>
-            </section>
-
-            <section class="search-map-panel">
-                <div class="search-map-placeholder">
-                    <div class="map-label">Route / Map Placeholder</div>
-                    <div class="mock-route-point route-point-1">Campus</div>
-                    <div class="mock-route-point route-point-2">Stop A</div>
-                    <div class="mock-route-point route-point-3">Stop B</div>
-                </div>
-            </section>
-
-            <aside class="search-right-panel">
-                <h2>Travel Plan</h2>
-                <p>Build your trip by adding route stops.</p>
-
-                <div id="travelPlanPreview" class="travel-plan-preview">
-                    <p>No stops added yet.</p>
-                </div>
-
-                <button class="side-btn" onclick="goToTravelPlan()">View Travel Plan</button>
-                <button class="side-btn" onclick="goToMain()">Back to Main</button>
-            </aside>
-
+            <h2>Available Stations</h2>
+            <div id="stationsSearchList"></div>
         </main>
     </div>
 
     <script type="module" src="../js/pages/searchPage.js"></script>
 </body>
+
 </html>

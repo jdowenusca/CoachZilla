@@ -2,15 +2,17 @@
 <!-- Edited by: (editor name)-->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoachZilla - Travel Plan</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
+
 <body>
 
-    <button class="about-btn" onclick="goToAbout()">About</button>
+    <button id="about-btn">About</button>
 
     <div class="travel-page-wrapper">
 
@@ -19,32 +21,26 @@
         </header>
 
         <main class="travel-layout">
+            <h1>Travel Plan</h1>
 
-            <section class="travel-main-panel">
-                <h2>My Travel Plan</h2>
-                <p class="travel-subtitle">Review the stops you have added to your current trip.</p>
+            <div class="travel-actions">
+                <button id="backHomeBtn">Home</button>
+                <button id="goSearchBtn">Search Routes</button>
+                <button id="goAboutBtn">About</button>
+                <button id="logoutBtn">Logout</button>
+            </div>
 
-                <div id="travelPlanList" class="travel-plan-list">
-                    <!-- Travel plan items will be loaded here -->
-                </div>
-            </section>
+            <h2>Selected Stations</h2>
+            <div id="travelPlanList"></div>
 
-            <aside class="travel-side-panel">
-                <h2>Actions</h2>
-                <button class="side-btn" onclick="goToSearch()">Back to Search</button>
-                <button class="side-btn" onclick="goToMain()">Back to Main</button>
-                <button class="side-btn danger-btn" onclick="clearTravelPlan()">Clear Travel Plan</button>
-
-                <div class="mini-card">
-                    <h3>Storage Type</h3>
-                    <p>This page uses local browser storage.</p>
-                    <p>No Firebase connection is needed for this prototype feature.</p>
-                </div>
-            </aside>
+            <div class="travel-bottom-actions">
+                <button id="clearTravelPlanBtn">Clear Travel Plan</button>
+            </div>
 
         </main>
     </div>
 
     <script type="module" src="../js/pages/travelPage.js"></script>
 </body>
+
 </html>

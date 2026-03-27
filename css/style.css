@@ -127,6 +127,13 @@ button {
     box-sizing: border-box;
 }
 
+#stationSearchInput {
+  width: 100%;
+  max-width: 400px;
+  padding: 8px;
+  margin: 10px 0 20px 0;
+}
+
 .info-card {
     cursor: pointer;
 }
@@ -399,6 +406,15 @@ button {
     margin: 4px 0;
 }
 
+.travel-actions,
+.travel-bottom-actions {
+  margin-bottom: 20px;
+}
+
+.travel-bottom-actions button {
+  margin-top: 10px;
+}
+
 .remove-btn {
     min-width: 90px;
 }
@@ -477,6 +493,26 @@ button {
     margin-top: 10px;
     font-size: 14px;
     color: #444;
+}
+
+.form-section {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.form-section input {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  margin: 8px 0;
+  padding: 8px;
+}
+
+.edit-actions {
+  margin-bottom: 20px;
 }
 
 .admin-page-wrapper {
