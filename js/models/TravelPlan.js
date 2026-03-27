@@ -1,91 +1,95 @@
 export default class TravelPlan {
-  constructor(
-    id,
-    selectedBus = null,
-    route = null,
-    destinations = [],
-    status = "Planned",
-    user = null
-  ) {
-    this.id = id;
-    this.selectedBus = selectedBus;
-    this.route = route;
-    this.destinations = destinations;
-    this.status = status;
-    this.user = user;
-  }
-
-  getID() {
-    return this.id;
-  }
-
-  setID(id) {
-    this.id = id;
-  }
-
-  getSelectedBus() {
-    return this.selectedBus;
-  }
-
-  setSelectedBus(selectedBus) {
-    this.selectedBus = selectedBus;
-  }
-
-  getRoute() {
-    return this.route;
-  }
-
-  setRoute(route) {
-    this.route = route;
-  }
-
-  getDestinations() {
-    return this.destinations;
-  }
-
-  setDestinations(destinations) {
-    this.destinations = destinations;
-  }
-
-  addDestination(destination) {
-    this.destinations.push(destination);
-  }
-
-  removeDestination(index) {
-    if (index >= 0 && index < this.destinations.length) {
-      this.destinations.splice(index, 1);
+    constructor(
+        travelPlanId,
+        userId,
+        selectedBusId,
+        destinations = [],
+        route = null,
+        status = "planned",
+        createdAt = null,
+        updatedAt = null
+    ) {
+        this.travelPlanId = travelPlanId || `tp-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+        this.userId = userId;
+        this.selectedBusId = selectedBusId;
+        this.destinations = destinations;
+        this.route = route;
+        this.status = status;
+        this.createdAt = createdAt || new Date().toISOString();
+        this.updatedAt = updatedAt || new Date().toISOString();
     }
-  }
 
-  getStatus() {
-    return this.status;
-  }
+    getTravelPlanId() {
+        return this.travelPlanId;
+    }
 
-  setStatus(status) {
-    this.status = status;
-  }
+    getUserId() {
+        return this.userId;
+    }
 
-  getUser() {
-    return this.user;
-  }
+    getSelectedBusId() {
+        return this.selectedBusId;
+    }
 
-  setUser(user) {
-    this.user = user;
-  }
+    getDestinations() {
+        return this.destinations;
+    }
 
-  displayInfo() {
-    const busInfo = this.selectedBus?.getID
-      ? `Bus ID: ${this.selectedBus.getID()}`
-      : "No bus selected";
+    getRoute() {
+        return this.route;
+    }
 
-    const routeInfo = this.route?.displayInfo
-      ? this.route.displayInfo()
-      : "No route assigned";
+    getStatus() {
+        return this.status;
+    }
 
-    const userInfo = this.user?.getUsername
-      ? `User: ${this.user.getUsername()}`
-      : "No user assigned";
+    getCreatedAt() {
+        return this.createdAt;
+    }
 
-    return `Travel Plan ID: ${this.id}, ${busInfo}, Destinations: ${this.destinations.length}, Status: ${this.status}, ${userInfo}, ${routeInfo}`;
-  }
+    getUpdatedAt() {
+        return this.updatedAt;
+    }
+
+    setUserId(userId) {
+        this.userId = userId;
+        this.touch();
+    }
+
+    setSelectedBusId(selectedBusId) {
+        this.selectedBusId = selectedBusId;
+        this.touch();
+    }
+
+    setDestinations(destinations) {
+        this.destinations = destinations;
+        this.touch();
+    }
+
+    setRoute(route) {
+        this.route = route;
+        this.touch();
+    }
+
+    setStatus(status) {
+        this.status = status;
+        this.touch();
+    }
+
+    touch() {
+        this.updatedAt = new Date().toISOString();
+    }
+
+    toJSON() {
+        return {
+            travelPlanId: this.travelPlanId,
+            userId: this.userId,
+            selectedBusId: this.selectedBusId,
+            destinations: this.destinations,
+            route: this.route,
+            status: this.status,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt
+        };
+    }
 }

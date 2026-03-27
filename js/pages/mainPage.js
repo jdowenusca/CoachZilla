@@ -23,7 +23,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (welcomeMessage) {
     const displayName =
-      storedUser.fullName || storedUser.username || "User";
+      storedUser.username || "User";
     welcomeMessage.textContent = `Welcome, ${displayName}!`;
   }
 

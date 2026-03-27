@@ -2,122 +2,102 @@ import TravelPlan from "../models/TravelPlan.js";
 import RoutePlanner from "./RoutePlanner.js";
 
 export default class TravelPlanManager {
-  constructor(storageKey = "coachzilla_travel_plans") {
-    this.storageKey = storageKey;
-    this.travelPlans = this.loadTravelPlans();
-    this.routePlanner = new RoutePlanner();
-  }
-
-  loadTravelPlans() {
-    const storedPlans = localStorage.getItem(this.storageKey);
-
-    if (!storedPlans) {
-      return [];
+    constructor() {
+        this.storageKey = "travelPlans";
+        this.routePlanner = new RoutePlanner();
     }
 
-    try {
-      return JSON.parse(storedPlans);
-    } catch (error) {
-      console.error("Error loading travel plans:", error);
-      return [];
-    }
-  }
+    // --- INTERNAL STORAGE HELPERS ---
 
-  saveTravelPlans() {
-    localStorage.setItem(this.storageKey, JSON.stringify(this.travelPlans));
-  }
-
-  generatePlanID() {
-    if (this.travelPlans.length === 0) {
-      return 1;
+    loadPlans() {
+        const data = localStorage.getItem(this.storageKey);
+        return data ? JSON.parse(data) : [];
     }
 
-    const maxID = Math.max(
-      ...this.travelPlans.map((plan) => Number(plan.id || plan._id || 0))
-    );
-
-    return maxID + 1;
-  }
-
-  createTravelPlan(user, selectedBus, destinations, availableStations = []) {
-    if (!destinations || destinations.length < 2) {
-      return null;
+    savePlans(plans) {
+        localStorage.setItem(this.storageKey, JSON.stringify(plans));
     }
 
-    const route = this.routePlanner.createMultiStopRoute(
-      destinations,
-      selectedBus,
-      availableStations
-    );
+    // --- CREATE ---
 
-    if (!route) {
-      return null;
+    createTravelPlan(userId, bus, destinationIds, allStations) {
+        if (!userId || !bus || !destinationIds || destinationIds.length < 2) {
+            throw new Error("Invalid travel plan input");
+        }
+
+        const route = this.routePlanner.buildRoute(bus, destinationIds, allStations);
+
+        const newPlan = new TravelPlan(
+            null,
+            userId,
+            bus.id,
+            destinationIds,
+            route
+        );
+
+        const plans = this.loadPlans();
+        plans.push(newPlan);
+
+        this.savePlans(plans);
+
+        return newPlan;
     }
 
-    const plan = new TravelPlan(
-      this.generatePlanID(),
-      selectedBus,
-      route,
-      destinations,
-      "Planned",
-      user
-    );
+    // --- READ ---
 
-    const plainPlanObject = {
-      id: plan.getID(),
-      selectedBus,
-      route,
-      destinations,
-      status: plan.getStatus(),
-      user
-    };
-
-    this.travelPlans.push(plainPlanObject);
-    this.saveTravelPlans();
-
-    return plan;
-  }
-
-  getAllTravelPlans() {
-    return this.travelPlans;
-  }
-
-  findTravelPlanByID(planID) {
-    return (
-      this.travelPlans.find((plan) => Number(plan.id) === Number(planID)) || null
-    );
-  }
-
-  updateTravelPlanStatus(planID, newStatus) {
-    const plan = this.findTravelPlanByID(planID);
-
-    if (!plan) {
-      return null;
+    getAllPlans() {
+        return this.loadPlans();
     }
 
-    plan.status = newStatus;
-    this.saveTravelPlans();
-    return plan;
-  }
-
-  removeTravelPlan(planID) {
-    const initialLength = this.travelPlans.length;
-
-    this.travelPlans = this.travelPlans.filter(
-      (plan) => Number(plan.id) !== Number(planID)
-    );
-
-    if (this.travelPlans.length !== initialLength) {
-      this.saveTravelPlans();
-      return true;
+    getPlansByUser(userId) {
+        return this.loadPlans().filter(plan => plan.userId === userId);
     }
 
-    return false;
-  }
+    getPlanById(planId) {
+        return this.loadPlans().find(plan => plan.travelPlanId === planId);
+    }
 
-  getTravelPlansByUser(userID) {
-    return this.travelPlans.filter(
-      (plan) => plan.user && Number(plan.user.userID) === Number(userID)
-    );
-  }
+    // --- UPDATE ---
+
+    updatePlanStatus(planId, newStatus) {
+        const plans = this.loadPlans();
+
+        const plan = plans.find(p => p.travelPlanId === planId);
+        if (!plan) return null;
+
+        plan.status = newStatus;
+        plan.updatedAt = new Date().toISOString();
+
+        this.savePlans(plans);
+
+        return plan;
+    }
+
+    // --- DELETE ---
+
+    deletePlan(planId) {
+        const plans = this.loadPlans();
+        const updatedPlans = plans.filter(p => p.travelPlanId !== planId);
+
+        this.savePlans(updatedPlans);
+    }
+
+    // --- OPTIONAL: REBUILD ROUTE ---
+
+    rebuildRoute(planId, bus, destinationIds, allStations) {
+        const plans = this.loadPlans();
+
+        const plan = plans.find(p => p.travelPlanId === planId);
+        if (!plan) return null;
+
+        const newRoute = this.routePlanner.buildRoute(bus, destinationIds, allStations);
+
+        plan.route = newRoute;
+        plan.destinations = destinationIds;
+        plan.updatedAt = new Date().toISOString();
+
+        this.savePlans(plans);
+
+        return plan;
+    }
 }

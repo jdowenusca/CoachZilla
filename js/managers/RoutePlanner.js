@@ -1,205 +1,89 @@
-import Leg from "../models/Leg.js";
 import Route from "../models/Route.js";
-import BusStation from "../models/BusStation.js";
-import RefuelStation from "../models/RefuelStation.js";
+import Leg from "../models/Leg.js";
 
 export default class RoutePlanner {
-  constructor() {}
 
-  toRadians(degrees) {
-    return degrees * (Math.PI / 180);
-  }
-
-  calculateDistance(lat1, lon1, lat2, lon2) {
-    const earthRadiusMiles = 3958.8;
-
-    const dLat = this.toRadians(lat2 - lat1);
-    const dLon = this.toRadians(lon2 - lon1);
-
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.toRadians(lat1)) *
-        Math.cos(this.toRadians(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return earthRadiusMiles * c;
-  }
-
-  calculateHeading(lat1, lon1, lat2, lon2) {
-    const phi1 = this.toRadians(lat1);
-    const phi2 = this.toRadians(lat2);
-    const lambda1 = this.toRadians(lon1);
-    const lambda2 = this.toRadians(lon2);
-
-    const y = Math.sin(lambda2 - lambda1) * Math.cos(phi2);
-    const x =
-      Math.cos(phi1) * Math.sin(phi2) -
-      Math.sin(phi1) * Math.cos(phi2) * Math.cos(lambda2 - lambda1);
-
-    let heading = (Math.atan2(y, x) * 180) / Math.PI;
-    heading = (heading + 360) % 360;
-
-    return Math.round(heading);
-  }
-
-  calculateTravelTime(distance, cruiseSpeed) {
-    if (!cruiseSpeed || cruiseSpeed <= 0) {
-      return 0;
+    getStationById(id, stations) {
+        return stations.find(s => s.id === id);
     }
 
-    return distance / cruiseSpeed;
-  }
+    calculateDistance(coord1, coord2) {
+        const [lat1, lon1] = coord1;
+        const [lat2, lon2] = coord2;
 
-  buildLeg(startStation, endStation, bus, isRefuelStop = false) {
-    const distance = this.calculateDistance(
-      startStation.getLatitude(),
-      startStation.getLongitude(),
-      endStation.getLatitude(),
-      endStation.getLongitude()
-    );
+        const dx = lat2 - lat1;
+        const dy = lon2 - lon1;
 
-    const heading = this.calculateHeading(
-      startStation.getLatitude(),
-      startStation.getLongitude(),
-      endStation.getLatitude(),
-      endStation.getLongitude()
-    );
-
-    const timeToDestination = this.calculateTravelTime(
-      distance,
-      bus.getCruiseSpeed()
-    );
-
-    return new Leg(
-      startStation,
-      endStation,
-      Number(distance.toFixed(2)),
-      Number(timeToDestination.toFixed(2)),
-      heading,
-      isRefuelStop
-    );
-  }
-
-  findNearestCompatibleRefuelStation(currentStation, refuelStations, busFuelType) {
-    let nearestStation = null;
-    let shortestDistance = Infinity;
-
-    for (const station of refuelStations) {
-      if (!(station instanceof RefuelStation)) {
-        continue;
-      }
-
-      if (
-        station.getFuelType().toLowerCase() !== busFuelType.toLowerCase()
-      ) {
-        continue;
-      }
-
-      const distance = this.calculateDistance(
-        currentStation.getLatitude(),
-        currentStation.getLongitude(),
-        station.getLatitude(),
-        station.getLongitude()
-      );
-
-      if (distance < shortestDistance) {
-        shortestDistance = distance;
-        nearestStation = station;
-      }
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
-    return nearestStation;
-  }
+    calculateHeading(coord1, coord2) {
+        const [lat1, lon1] = coord1;
+        const [lat2, lon2] = coord2;
 
-  createRoute(startStation, endStation, bus, availableStations = []) {
-    const route = new Route();
-
-    const directDistance = this.calculateDistance(
-      startStation.getLatitude(),
-      startStation.getLongitude(),
-      endStation.getLatitude(),
-      endStation.getLongitude()
-    );
-
-    const maxRange = bus.calculateMaxRange();
-
-    if (directDistance <= maxRange) {
-      const directLeg = this.buildLeg(startStation, endStation, bus, false);
-      route.addLeg(directLeg);
-      return route;
+        const angle = Math.atan2(lon2 - lon1, lat2 - lat1);
+        return (angle * 180 / Math.PI + 360) % 360;
     }
 
-    const refuelStations = availableStations.filter(
-      (station) => station instanceof RefuelStation
-    );
-
-    const nearestRefuelStation = this.findNearestCompatibleRefuelStation(
-      startStation,
-      refuelStations,
-      bus.getFuelType()
-    );
-
-    if (!nearestRefuelStation) {
-      return null;
+    calculateTime(distance, speed) {
+        if (!speed || speed <= 0) return 0;
+        return distance / speed;
     }
 
-    const firstLegDistance = this.calculateDistance(
-      startStation.getLatitude(),
-      startStation.getLongitude(),
-      nearestRefuelStation.getLatitude(),
-      nearestRefuelStation.getLongitude()
-    );
+    buildRoute(bus, destinationIds, allStations) {
+        if (!bus || !destinationIds || destinationIds.length < 2) {
+            throw new Error("Invalid route input");
+        }
 
-    const secondLegDistance = this.calculateDistance(
-      nearestRefuelStation.getLatitude(),
-      nearestRefuelStation.getLongitude(),
-      endStation.getLatitude(),
-      endStation.getLongitude()
-    );
+        const route = new Route();
+        const legs = [];
 
-    if (firstLegDistance > maxRange || secondLegDistance > maxRange) {
-      return null;
+        let totalDistance = 0;
+        let totalTime = 0;
+        const refuelStops = [];
+
+        for (let i = 0; i < destinationIds.length - 1; i++) {
+            const start = this.getStationById(destinationIds[i], allStations);
+            const end = this.getStationById(destinationIds[i + 1], allStations);
+
+            if (!start || !end) continue;
+
+            const startCoords = [start.latitude, start.longitude];
+            const endCoords = [end.latitude, end.longitude];
+
+            const distance = this.calculateDistance(startCoords, endCoords);
+            const time = this.calculateTime(distance, bus.cruiseSpeed);
+            const heading = this.calculateHeading(startCoords, endCoords);
+
+            const isRefuelStop = end.name === "GAS";
+
+            if (isRefuelStop) {
+                refuelStops.push(end.id);
+            }
+
+            const leg = new Leg(
+                null,
+                start.id,
+                end.id,
+                startCoords,
+                endCoords,
+                distance,
+                time,
+                heading,
+                isRefuelStop
+            );
+
+            legs.push(leg);
+
+            totalDistance += distance;
+            totalTime += time;
+        }
+
+        route.setLegs(legs);
+        route.setTotalDistance(totalDistance);
+        route.setTotalTime(totalTime);
+        route.setRefuelStops(refuelStops);
+
+        return route;
     }
-
-    const leg1 = this.buildLeg(startStation, nearestRefuelStation, bus, true);
-    const leg2 = this.buildLeg(nearestRefuelStation, endStation, bus, false);
-
-    route.addLeg(leg1);
-    route.addLeg(leg2);
-
-    return route;
-  }
-
-  createMultiStopRoute(destinations, bus, availableStations = []) {
-    if (!destinations || destinations.length < 2) {
-      return null;
-    }
-
-    const finalRoute = new Route();
-
-    for (let i = 0; i < destinations.length - 1; i++) {
-      const startStation = destinations[i];
-      const endStation = destinations[i + 1];
-
-      const partialRoute = this.createRoute(
-        startStation,
-        endStation,
-        bus,
-        availableStations
-      );
-
-      if (!partialRoute) {
-        return null;
-      }
-
-      for (const leg of partialRoute.getLegs()) {
-        finalRoute.addLeg(leg);
-      }
-    }
-
-    return finalRoute;
-  }
 }

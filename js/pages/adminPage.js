@@ -31,7 +31,7 @@ window.addEventListener("DOMContentLoaded", () => {
   App.currentUser = storedUser;
 
   if (adminWelcomeMessage) {
-    const displayName = storedUser.fullName || storedUser.username || "Admin";
+    const displayName = storedUser.username || "Admin";
     adminWelcomeMessage.textContent = `Welcome, ${displayName}!`;
   }
 
@@ -71,8 +71,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
     adminUsersList.innerHTML = users.map(user => `
       <div class="admin-card">
-        <p><strong>Name:</strong> ${user.fullName || "N/A"}</p>
-        <p><strong>Email:</strong> ${user.email || "N/A"}</p>
         <p><strong>Username:</strong> ${user.username || "N/A"}</p>
         <p><strong>Role:</strong> ${user.role || "user"}</p>
       </div>

@@ -1,59 +1,93 @@
 export default class Route {
-  constructor(legs = []) {
-    this.legs = legs;
-    this.totalDistance = 0;
-    this.totalTime = 0;
-    this.updateTotals();
-  }
-
-  getLegs() {
-    return this.legs;
-  }
-
-  setLegs(legs) {
-    this.legs = legs;
-    this.updateTotals();
-  }
-
-  addLeg(leg) {
-    this.legs.push(leg);
-    this.updateTotals();
-  }
-
-  removeLeg(index) {
-    if (index >= 0 && index < this.legs.length) {
-      this.legs.splice(index, 1);
-      this.updateTotals();
+    constructor(
+        routeId = null,
+        legs = [],
+        totalDistance = 0,
+        totalTime = 0,
+        refuelStops = [],
+        createdAt = null,
+        updatedAt = null
+    ) {
+        this.routeId = routeId || `route-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+        this.legs = legs;
+        this.totalDistance = totalDistance;
+        this.totalTime = totalTime;
+        this.refuelStops = refuelStops;
+        this.createdAt = createdAt || new Date().toISOString();
+        this.updatedAt = updatedAt || new Date().toISOString();
     }
-  }
 
-  getTotalDistance() {
-    return this.totalDistance;
-  }
-
-  setTotalDistance(totalDistance) {
-    this.totalDistance = totalDistance;
-  }
-
-  getTotalTime() {
-    return this.totalTime;
-  }
-
-  setTotalTime(totalTime) {
-    this.totalTime = totalTime;
-  }
-
-  updateTotals() {
-    this.totalDistance = 0;
-    this.totalTime = 0;
-
-    for (const leg of this.legs) {
-      this.totalDistance += Number(leg.getDistance()) || 0;
-      this.totalTime += Number(leg.getTimeToDestination()) || 0;
+    getRouteId() {
+        return this.routeId;
     }
-  }
 
-  displayInfo() {
-    return `Route with ${this.legs.length} leg(s), Total Distance: ${this.totalDistance}, Total Time: ${this.totalTime}`;
-  }
+    getLegs() {
+        return this.legs;
+    }
+
+    getTotalDistance() {
+        return this.totalDistance;
+    }
+
+    getTotalTime() {
+        return this.totalTime;
+    }
+
+    getRefuelStops() {
+        return this.refuelStops;
+    }
+
+    getCreatedAt() {
+        return this.createdAt;
+    }
+
+    getUpdatedAt() {
+        return this.updatedAt;
+    }
+
+    setLegs(legs) {
+        this.legs = legs;
+        this.touch();
+    }
+
+    setTotalDistance(totalDistance) {
+        this.totalDistance = totalDistance;
+        this.touch();
+    }
+
+    setTotalTime(totalTime) {
+        this.totalTime = totalTime;
+        this.touch();
+    }
+
+    setRefuelStops(refuelStops) {
+        this.refuelStops = refuelStops;
+        this.touch();
+    }
+
+    addLeg(leg) {
+        this.legs.push(leg);
+        this.touch();
+    }
+
+    addRefuelStop(refuelStop) {
+        this.refuelStops.push(refuelStop);
+        this.touch();
+    }
+
+    touch() {
+        this.updatedAt = new Date().toISOString();
+    }
+
+    toJSON() {
+        return {
+            routeId: this.routeId,
+            legs: this.legs,
+            totalDistance: this.totalDistance,
+            totalTime: this.totalTime,
+            refuelStops: this.refuelStops,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt
+        };
+    }
 }
