@@ -6,10 +6,17 @@ window.addEventListener("DOMContentLoaded", () => {
   App.init();
 
   const storedUser = JSON.parse(localStorage.getItem("currentUser"));
+  const activeTravelPlanId = localStorage.getItem("activeTravelPlanId");
 
   if (!storedUser) {
     alert("You must be logged in to view this page.");
     window.location.href = "index.html";
+    return;
+  }
+
+  if (!activeTravelPlanId) {
+    alert("No active travel plan found.");
+    window.location.href = "search.html";
     return;
   }
 
@@ -19,8 +26,28 @@ window.addEventListener("DOMContentLoaded", () => {
   const goSearchBtn = document.getElementById("goSearchBtn");
   const goAboutBtn = document.getElementById("goAboutBtn");
   const logoutBtn = document.getElementById("logoutBtn");
-  const clearTravelPlanBtn = document.getElementById("clearTravelPlanBtn");
-  const travelPlanList = document.getElementById("travelPlanList");
+
+  const travelPlanContainer = document.getElementById("travelPlanContainer");
+  const updateStatusBtn = document.getElementById("updateStatusBtn");
+  const deletePlanBtn = document.getElementById("deletePlanBtn");
+  const statusSelect = document.getElementById("statusSelect");
+
+  let activePlan = App.travelPlanManager.getPlanById(activeTravelPlanId);
+
+  if (!activePlan) {
+    alert("Travel plan not found.");
+    localStorage.removeItem("activeTravelPlanId");
+    window.location.href = "search.html";
+    return;
+  }
+
+  if (activePlan.userId !== storedUser.userID) {
+    alert("You do not have access to this travel plan.");
+    window.location.href = "search.html";
+    return;
+  }
+
+  renderTravelPlan(activePlan);
 
   if (backHomeBtn) {
     backHomeBtn.addEventListener("click", () => {
@@ -47,68 +74,83 @@ window.addEventListener("DOMContentLoaded", () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("currentUser");
+      localStorage.removeItem("activeTravelPlanId");
       App.currentUser = null;
       window.location.href = "index.html";
     });
   }
 
-  if (clearTravelPlanBtn) {
-    clearTravelPlanBtn.addEventListener("click", () => {
-      localStorage.removeItem("selectedStations");
-      renderTravelPlan();
-      alert("Travel plan cleared.");
+  if (updateStatusBtn && statusSelect) {
+    updateStatusBtn.addEventListener("click", () => {
+      const newStatus = statusSelect.value;
+
+      const updatedPlan = App.travelPlanManager.updatePlanStatus(
+        activeTravelPlanId,
+        newStatus
+      );
+
+      if (!updatedPlan) {
+        alert("Failed to update status.");
+        return;
+      }
+
+      activePlan = updatedPlan;
+      renderTravelPlan(activePlan);
+      alert("Travel plan status updated.");
     });
   }
 
-  renderTravelPlan();
+  if (deletePlanBtn) {
+    deletePlanBtn.addEventListener("click", () => {
+      const confirmed = confirm("Delete this travel plan?");
+      if (!confirmed) return;
 
-  function renderTravelPlan() {
-    if (!travelPlanList) return;
+      App.travelPlanManager.deletePlan(activeTravelPlanId);
+      localStorage.removeItem("activeTravelPlanId");
 
-    const selectedStations =
-      JSON.parse(localStorage.getItem("selectedStations")) || [];
+      alert("Travel plan deleted.");
+      window.location.href = "search.html";
+    });
+  }
 
-    if (selectedStations.length === 0) {
-      travelPlanList.innerHTML = "<p>No stations selected yet.</p>";
-      return;
-    }
+  function renderTravelPlan(plan) {
+    if (!travelPlanContainer) return;
 
-    travelPlanList.innerHTML = selectedStations.map((station, index) => `
+    const route = plan.route || {};
+    const legs = route.legs || [];
+
+    travelPlanContainer.innerHTML = `
       <div class="admin-card">
-        <p><strong>Name:</strong> ${station.name || "N/A"}</p>
-        <p><strong>Latitude:</strong> ${station.latitude ?? "N/A"}</p>
-        <p><strong>Longitude:</strong> ${station.longitude ?? "N/A"}</p>
-        <p><strong>Type:</strong> ${station.stationType || station.fuelType || "N/A"}</p>
-        <button class="remove-station-btn" data-index="${index}">Remove</button>
+        <p><strong>Plan ID:</strong> ${plan.travelPlanId}</p>
+        <p><strong>Status:</strong> ${plan.status}</p>
+        <p><strong>Bus ID:</strong> ${plan.selectedBusId}</p>
+        <p><strong>Total Distance:</strong> ${route.totalDistance ?? 0}</p>
+        <p><strong>Total Time:</strong> ${route.totalTime ?? 0}</p>
+        <p><strong>Created:</strong> ${plan.createdAt || "N/A"}</p>
+        <p><strong>Updated:</strong> ${plan.updatedAt || "N/A"}</p>
       </div>
-    `).join("");
 
-    const removeButtons = document.querySelectorAll(".remove-station-btn");
+      <h3>Route Legs</h3>
 
-    removeButtons.forEach(button => {
-      button.addEventListener("click", () => {
-        const index = Number(button.dataset.index);
-        removeStationAtIndex(index);
-      });
-    });
-  }
-
-  function removeStationAtIndex(index) {
-    const selectedStations =
-      JSON.parse(localStorage.getItem("selectedStations")) || [];
-
-    if (index < 0 || index >= selectedStations.length) {
-      return;
-    }
-
-    const removedStation = selectedStations[index];
-    selectedStations.splice(index, 1);
-
-    localStorage.setItem("selectedStations", JSON.stringify(selectedStations));
-    renderTravelPlan();
-
-    if (removedStation?.name) {
-      alert(`${removedStation.name} removed from travel plan.`);
-    }
+      ${
+        legs.length === 0
+          ? "<p>No route legs found.</p>"
+          : legs
+              .map(
+                (leg, index) => `
+                  <div class="admin-card">
+                    <p><strong>Leg ${index + 1}</strong></p>
+                    <p><strong>Start Station ID:</strong> ${leg.startStationId}</p>
+                    <p><strong>End Station ID:</strong> ${leg.endStationId}</p>
+                    <p><strong>Distance:</strong> ${leg.distance}</p>
+                    <p><strong>Time:</strong> ${leg.timeToDestination}</p>
+                    <p><strong>Heading:</strong> ${leg.heading}</p>
+                    <p><strong>Refuel Stop:</strong> ${leg.isRefuelStop ? "Yes" : "No"}</p>
+                  </div>
+                `
+              )
+              .join("")
+      }
+    `;
   }
 });

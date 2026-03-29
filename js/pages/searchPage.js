@@ -21,10 +21,57 @@ window.addEventListener("DOMContentLoaded", () => {
   const logoutBtn = document.getElementById("logoutBtn");
   const stationSearchInput = document.getElementById("stationSearchInput");
   const stationsSearchList = document.getElementById("stationsSearchList");
+  const busSelect = document.getElementById("busSelect");
+  const buildBtn = document.getElementById("buildRouteBtn");
 
-  let stations = App.stationManager.getAllStations();
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const buses = App.busManager.getAllBuses();
+  const stations = App.stationManager.getAllStations();
+
+  let selectedDestinationIds = [];
+
+  if (busSelect) {
+    buses.forEach((bus) => {
+      const option = document.createElement("option");
+      option.value = bus.id;
+      option.textContent = `${bus.make} ${bus.model}`;
+      busSelect.appendChild(option);
+    });
+  }
 
   renderStations(stations);
+
+  if (buildBtn) {
+    buildBtn.addEventListener("click", () => {
+      try {
+        const busId = busSelect.value;
+        const selectedBus = buses.find((b) => b.id === busId);
+
+        if (!selectedBus) {
+          alert("Select a bus first.");
+          return;
+        }
+
+        if (selectedDestinationIds.length < 2) {
+          alert("Select at least 2 destinations.");
+          return;
+        }
+
+        const newPlan = App.travelPlanManager.createTravelPlan(
+          currentUser.userID,
+          selectedBus,
+          selectedDestinationIds,
+          stations
+        );
+
+        localStorage.setItem("activeTravelPlanId", newPlan.travelPlanId);
+        window.location.href = "travel.html";
+      } catch (err) {
+        console.error(err);
+        alert("Failed to create route.");
+      }
+    });
+  }
 
   if (backHomeBtn) {
     backHomeBtn.addEventListener("click", () => {
@@ -38,6 +85,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (goTravelBtn) {
     goTravelBtn.addEventListener("click", () => {
+      const activeTravelPlanId = localStorage.getItem("activeTravelPlanId");
+
+      if (!activeTravelPlanId) {
+        alert("Build a travel plan first.");
+        return;
+      }
+
       window.location.href = "travel.html";
     });
   }
@@ -51,6 +105,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("currentUser");
+      localStorage.removeItem("activeTravelPlanId");
       App.currentUser = null;
       window.location.href = "index.html";
     });
@@ -60,7 +115,7 @@ window.addEventListener("DOMContentLoaded", () => {
     stationSearchInput.addEventListener("input", () => {
       const searchText = stationSearchInput.value.trim().toLowerCase();
 
-      const filteredStations = stations.filter(station =>
+      const filteredStations = stations.filter((station) =>
         (station.name || "").toLowerCase().includes(searchText)
       );
 
@@ -76,41 +131,46 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    stationsSearchList.innerHTML = stationsToRender.map((station, index) => `
+    stationsSearchList.innerHTML = stationsToRender
+      .map(
+        (station) => `
       <div class="admin-card">
         <p><strong>Name:</strong> ${station.name || "N/A"}</p>
         <p><strong>Latitude:</strong> ${station.latitude ?? "N/A"}</p>
         <p><strong>Longitude:</strong> ${station.longitude ?? "N/A"}</p>
         <p><strong>Type:</strong> ${station.stationType || station.fuelType || "N/A"}</p>
-        <button class="add-station-btn" data-index="${index}">Add to Travel Plan</button>
+        <button class="add-station-btn" data-station-id="${station.id}">Add to Travel Plan</button>
       </div>
-    `).join("");
+    `
+      )
+      .join("");
 
     const addButtons = document.querySelectorAll(".add-station-btn");
 
-    addButtons.forEach((button, index) => {
+    addButtons.forEach((button) => {
       button.addEventListener("click", () => {
-        const station = stationsToRender[index];
-        addStationToTravelPlan(station);
+        const stationId = button.dataset.stationId;
+        addStationToTravelPlan(stationId);
       });
     });
   }
 
-  function addStationToTravelPlan(station) {
-    const existingPlan = JSON.parse(localStorage.getItem("selectedStations")) || [];
+  function addStationToTravelPlan(stationId) {
+    const station = stations.find((s) => String(s.id) === String(stationId));
 
-    const alreadyExists = existingPlan.some(savedStation =>
-      savedStation.id === station.id
-    );
+    if (!station) {
+      alert("Station not found.");
+      return;
+    }
+
+    const alreadyExists = selectedDestinationIds.includes(String(stationId));
 
     if (alreadyExists) {
       alert("That station is already in your travel plan.");
       return;
     }
 
-    existingPlan.push(station);
-    localStorage.setItem("selectedStations", JSON.stringify(existingPlan));
-
+    selectedDestinationIds.push(String(stationId));
     alert(`${station.name} added to travel plan.`);
   }
 });

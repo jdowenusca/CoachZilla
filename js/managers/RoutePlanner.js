@@ -4,7 +4,7 @@ import Leg from "../models/Leg.js";
 export default class RoutePlanner {
 
     getStationById(id, stations) {
-        return stations.find(s => s.id === id);
+        return stations.find(s => String(s.id) === String(id));
     }
 
     calculateDistance(coord1, coord2) {

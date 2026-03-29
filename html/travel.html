@@ -21,19 +21,17 @@
         <main class="travel-layout">
             <h1>Travel Plan</h1>
 
-            <div class="travel-actions">
-                <button id="backHomeBtn">Home</button>
-                <button id="goSearchBtn">Search Routes</button>
-                <button id="goAboutBtn">About</button>
-                <button id="logoutBtn">Logout</button>
-            </div>
+            <div id="travelPlanContainer"></div>
 
-            <h2>Selected Stations</h2>
-            <div id="travelPlanList"></div>
+            <select id="statusSelect">
+                <option value="planned">Planned</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
 
-            <div class="travel-bottom-actions">
-                <button id="clearTravelPlanBtn">Clear Travel Plan</button>
-            </div>
+            <button id="updateStatusBtn">Update Status</button>
+            <button id="deletePlanBtn">Delete Plan</button>
 
         </main>
     </div>
