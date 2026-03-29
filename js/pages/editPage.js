@@ -1,5 +1,3 @@
-// js/pages/editPage.js
-
 import { App } from "../app/app.js";
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -25,56 +23,131 @@ window.addEventListener("DOMContentLoaded", () => {
   const goAboutBtn = document.getElementById("goAboutBtn");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  const addBusBtn = document.getElementById("addBusBtn");
-  const addBusStationBtn = document.getElementById("addBusStationBtn");
-  const addRefuelStationBtn = document.getElementById("addRefuelStationBtn");
+  const busFormTitle = document.getElementById("busFormTitle");
+  const editingBusId = document.getElementById("editingBusId");
+  const busMake = document.getElementById("busMake");
+  const busModel = document.getElementById("busModel");
+  const busType = document.getElementById("busType");
+  const busFuelType = document.getElementById("busFuelType");
+  const busFuelTankSize = document.getElementById("busFuelTankSize");
+  const busFuelBurnRate = document.getElementById("busFuelBurnRate");
+  const busCruiseSpeed = document.getElementById("busCruiseSpeed");
+  const saveBusBtn = document.getElementById("saveBusBtn");
+  const cancelBusEditBtn = document.getElementById("cancelBusEditBtn");
+
+  const stationFormTitle = document.getElementById("stationFormTitle");
+  const editingStationId = document.getElementById("editingStationId");
+  const stationMode = document.getElementById("stationMode");
+  const stationName = document.getElementById("stationName");
+  const stationLatitude = document.getElementById("stationLatitude");
+  const stationLongitude = document.getElementById("stationLongitude");
+  const stationExtraField = document.getElementById("stationExtraField");
+  const saveStationBtn = document.getElementById("saveStationBtn");
+  const cancelStationEditBtn = document.getElementById("cancelStationEditBtn");
 
   const editBusesList = document.getElementById("editBusesList");
   const editStationsList = document.getElementById("editStationsList");
 
-  if (backToAdminBtn) {
-    backToAdminBtn.addEventListener("click", () => {
-      window.location.href = "admin.html";
-    });
+  setupNavigation();
+  setupForms();
+  renderBuses();
+  renderStations();
+  resetBusForm();
+  resetStationForm();
+
+  function setupNavigation() {
+    if (backToAdminBtn) {
+      backToAdminBtn.addEventListener("click", () => {
+        window.location.href = "admin.html";
+      });
+    }
+
+    if (goAboutBtn) {
+      goAboutBtn.addEventListener("click", () => {
+        window.location.href = "about.html";
+      });
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("currentUser");
+        App.currentUser = null;
+        window.location.href = "index.html";
+      });
+    }
   }
 
-  if (goAboutBtn) {
-    goAboutBtn.addEventListener("click", () => {
-      window.location.href = "about.html";
-    });
+  function setupForms() {
+    if (stationMode) {
+      stationMode.addEventListener("change", updateStationExtraFieldLabel);
+    }
+
+    if (saveBusBtn) {
+      saveBusBtn.addEventListener("click", handleSaveBus);
+    }
+
+    if (cancelBusEditBtn) {
+      cancelBusEditBtn.addEventListener("click", resetBusForm);
+    }
+
+    if (saveStationBtn) {
+      saveStationBtn.addEventListener("click", handleSaveStation);
+    }
+
+    if (cancelStationEditBtn) {
+      cancelStationEditBtn.addEventListener("click", resetStationForm);
+    }
+
+    updateStationExtraFieldLabel();
   }
 
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("currentUser");
-      App.currentUser = null;
-      window.location.href = "index.html";
-    });
-  }
+  function handleSaveBus() {
+    const make = busMake.value.trim();
+    const model = busModel.value.trim();
+    const type = busType.value.trim();
+    const fuelType = busFuelType.value.trim();
+    const fuelTankSize = Number(busFuelTankSize.value);
+    const fuelBurnRate = Number(busFuelBurnRate.value);
+    const cruiseSpeed = Number(busCruiseSpeed.value);
 
-  if (addBusBtn) {
-    addBusBtn.addEventListener("click", () => {
-      const make = document.getElementById("busMake").value.trim();
-      const model = document.getElementById("busModel").value.trim();
-      const type = document.getElementById("busType").value.trim();
-      const fuelType = document.getElementById("busFuelType").value.trim();
-      const fuelTankSize = parseFloat(document.getElementById("busFuelTankSize").value);
-      const fuelBurnRate = parseFloat(document.getElementById("busFuelBurnRate").value);
-      const cruiseSpeed = parseFloat(document.getElementById("busCruiseSpeed").value);
+    if (
+      !make ||
+      !model ||
+      !type ||
+      !fuelType ||
+      Number.isNaN(fuelTankSize) ||
+      Number.isNaN(fuelBurnRate) ||
+      Number.isNaN(cruiseSpeed)
+    ) {
+      alert("Please fill in all bus fields correctly.");
+      return;
+    }
 
-      if (
-        !make ||
-        !model ||
-        !type ||
-        !fuelType ||
-        Number.isNaN(fuelTankSize) ||
-        Number.isNaN(fuelBurnRate) ||
-        Number.isNaN(cruiseSpeed)
-      ) {
-        alert("Please fill in all bus fields correctly.");
+    if (fuelTankSize <= 0 || fuelBurnRate <= 0 || cruiseSpeed <= 0) {
+      alert("Fuel tank size, fuel burn rate, and cruise speed must be greater than 0.");
+      return;
+    }
+
+    const existingBusId = editingBusId.value.trim();
+
+    if (existingBusId) {
+      const updatedBus = App.busManager.updateBus(existingBusId, {
+        make,
+        model,
+        type,
+        fuelType,
+        fuelTankSize,
+        fuelBurnRate,
+        cruiseSpeed
+      });
+
+      if (!updatedBus) {
+        alert("Failed to update bus.");
         return;
       }
 
+      alert("Bus updated successfully.");
+    } else {
       App.busManager.addBus(
         make,
         model,
@@ -85,64 +158,80 @@ window.addEventListener("DOMContentLoaded", () => {
         cruiseSpeed
       );
 
-      clearBusForm();
-      renderBuses();
       alert("Bus added successfully.");
-    });
+    }
+
+    resetBusForm();
+    renderBuses();
   }
 
-  if (addBusStationBtn) {
-    addBusStationBtn.addEventListener("click", () => {
-      const name = document.getElementById("busStationName").value.trim();
-      const latitude = parseFloat(document.getElementById("busStationLatitude").value);
-      const longitude = parseFloat(document.getElementById("busStationLongitude").value);
-      const stationType = document.getElementById("busStationType").value.trim();
+  function handleSaveStation() {
+    const mode = stationMode.value;
+    const name = stationName.value.trim();
+    const latitude = Number(stationLatitude.value);
+    const longitude = Number(stationLongitude.value);
+    const extraValue = stationExtraField.value.trim();
 
-      if (
-        !name ||
-        Number.isNaN(latitude) ||
-        Number.isNaN(longitude) ||
-        !stationType
-      ) {
-        alert("Please fill in all bus station fields correctly.");
+    if (
+      !name ||
+      Number.isNaN(latitude) ||
+      Number.isNaN(longitude) ||
+      !extraValue
+    ) {
+      alert("Please fill in all station fields correctly.");
+      return;
+    }
+
+    if (latitude < -90 || latitude > 90) {
+      alert("Latitude must be between -90 and 90.");
+      return;
+    }
+
+    if (longitude < -180 || longitude > 180) {
+      alert("Longitude must be between -180 and 180.");
+      return;
+    }
+
+    const existingStationId = editingStationId.value.trim();
+
+    if (existingStationId) {
+      let updatedStation = null;
+
+      if (mode === "bus") {
+        updatedStation = App.stationManager.updateBusStation(existingStationId, {
+          name,
+          latitude,
+          longitude,
+          stationType: extraValue
+        });
+      } else {
+        updatedStation = App.stationManager.updateRefuelStation(existingStationId, {
+          name,
+          latitude,
+          longitude,
+          fuelType: extraValue
+        });
+      }
+
+      if (!updatedStation) {
+        alert("Failed to update station. Make sure the station type matches the selected mode.");
         return;
       }
 
-      App.stationManager.addBusStation(name, latitude, longitude, stationType);
-
-      clearBusStationForm();
-      renderStations();
-      alert("Bus station added successfully.");
-    });
-  }
-
-  if (addRefuelStationBtn) {
-    addRefuelStationBtn.addEventListener("click", () => {
-      const name = document.getElementById("refuelStationName").value.trim();
-      const latitude = parseFloat(document.getElementById("refuelStationLatitude").value);
-      const longitude = parseFloat(document.getElementById("refuelStationLongitude").value);
-      const fuelType = document.getElementById("refuelFuelType").value.trim();
-
-      if (
-        !name ||
-        Number.isNaN(latitude) ||
-        Number.isNaN(longitude) ||
-        !fuelType
-      ) {
-        alert("Please fill in all refuel station fields correctly.");
-        return;
+      alert("Station updated successfully.");
+    } else {
+      if (mode === "bus") {
+        App.stationManager.addBusStation(name, latitude, longitude, extraValue);
+      } else {
+        App.stationManager.addRefuelStation(name, latitude, longitude, extraValue);
       }
 
-      App.stationManager.addRefuelStation(name, latitude, longitude, fuelType);
+      alert("Station added successfully.");
+    }
 
-      clearRefuelStationForm();
-      renderStations();
-      alert("Refuel station added successfully.");
-    });
+    resetStationForm();
+    renderStations();
   }
-
-  renderBuses();
-  renderStations();
 
   function renderBuses() {
     if (!editBusesList) return;
@@ -154,8 +243,9 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    editBusesList.innerHTML = buses.map(bus => `
+    editBusesList.innerHTML = buses.map((bus) => `
       <div class="admin-card">
+        <p><strong>ID:</strong> ${bus.id ?? "N/A"}</p>
         <p><strong>Make:</strong> ${bus.make || "N/A"}</p>
         <p><strong>Model:</strong> ${bus.model || "N/A"}</p>
         <p><strong>Type:</strong> ${bus.type || "N/A"}</p>
@@ -163,8 +253,26 @@ window.addEventListener("DOMContentLoaded", () => {
         <p><strong>Tank Size:</strong> ${bus.fuelTankSize ?? "N/A"}</p>
         <p><strong>Burn Rate:</strong> ${bus.fuelBurnRate ?? "N/A"}</p>
         <p><strong>Cruise Speed:</strong> ${bus.cruiseSpeed ?? "N/A"}</p>
+        <div class="card-action-row">
+          <button class="edit-bus-btn" data-bus-id="${bus.id}" type="button">Edit</button>
+          <button class="delete-bus-btn" data-bus-id="${bus.id}" type="button">Delete</button>
+        </div>
       </div>
     `).join("");
+
+    document.querySelectorAll(".edit-bus-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        const busId = button.dataset.busId;
+        startBusEdit(busId);
+      });
+    });
+
+    document.querySelectorAll(".delete-bus-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        const busId = button.dataset.busId;
+        deleteBus(busId);
+      });
+    });
   }
 
   function renderStations() {
@@ -177,38 +285,158 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    editStationsList.innerHTML = stations.map(station => `
-      <div class="admin-card">
-        <p><strong>ID:</strong> ${station.id || "N/A"}</p>
-        <p><strong>Name:</strong> ${station.name || "N/A"}</p>
-        <p><strong>Latitude:</strong> ${station.latitude ?? "N/A"}</p>
-        <p><strong>Longitude:</strong> ${station.longitude ?? "N/A"}</p>
-        <p><strong>Type:</strong> ${station.stationType || station.fuelType || "N/A"}</p>
-      </div>
-    `).join("");
+    editStationsList.innerHTML = stations.map((station) => {
+      const isRefuel = station.fuelType !== undefined;
+      const typeLabel = isRefuel ? `Fuel Type: ${station.fuelType}` : `Station Type: ${station.stationType}`;
+
+      return `
+        <div class="admin-card">
+          <p><strong>ID:</strong> ${station.id ?? "N/A"}</p>
+          <p><strong>Name:</strong> ${station.name || "N/A"}</p>
+          <p><strong>Latitude:</strong> ${station.latitude ?? "N/A"}</p>
+          <p><strong>Longitude:</strong> ${station.longitude ?? "N/A"}</p>
+          <p><strong>${isRefuel ? "Refuel Station" : "Bus Station"}</strong></p>
+          <p><strong>${typeLabel}</strong></p>
+          <div class="card-action-row">
+            <button class="edit-station-btn" data-station-id="${station.id}" type="button">Edit</button>
+            <button class="delete-station-btn" data-station-id="${station.id}" type="button">Delete</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    document.querySelectorAll(".edit-station-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        const stationId = button.dataset.stationId;
+        startStationEdit(stationId);
+      });
+    });
+
+    document.querySelectorAll(".delete-station-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        const stationId = button.dataset.stationId;
+        deleteStation(stationId);
+      });
+    });
   }
 
-  function clearBusForm() {
-    document.getElementById("busMake").value = "";
-    document.getElementById("busModel").value = "";
-    document.getElementById("busType").value = "";
-    document.getElementById("busFuelType").value = "";
-    document.getElementById("busFuelTankSize").value = "";
-    document.getElementById("busFuelBurnRate").value = "";
-    document.getElementById("busCruiseSpeed").value = "";
+  function startBusEdit(busId) {
+    const bus = App.busManager.findBusByID(busId);
+
+    if (!bus) {
+      alert("Bus not found.");
+      return;
+    }
+
+    editingBusId.value = bus.id;
+    busMake.value = bus.make || "";
+    busModel.value = bus.model || "";
+    busType.value = bus.type || "";
+    busFuelType.value = bus.fuelType || "";
+    busFuelTankSize.value = bus.fuelTankSize ?? "";
+    busFuelBurnRate.value = bus.fuelBurnRate ?? "";
+    busCruiseSpeed.value = bus.cruiseSpeed ?? "";
+
+    busFormTitle.textContent = `Edit Bus #${bus.id}`;
+    saveBusBtn.textContent = "Update Bus";
   }
 
-  function clearBusStationForm() {
-    document.getElementById("busStationName").value = "";
-    document.getElementById("busStationLatitude").value = "";
-    document.getElementById("busStationLongitude").value = "";
-    document.getElementById("busStationType").value = "";
+  function startStationEdit(stationId) {
+    const station = App.stationManager.findStationByID(stationId);
+
+    if (!station) {
+      alert("Station not found.");
+      return;
+    }
+
+    const isRefuel = station.fuelType !== undefined;
+
+    editingStationId.value = station.id;
+    stationMode.value = isRefuel ? "refuel" : "bus";
+    stationName.value = station.name || "";
+    stationLatitude.value = station.latitude ?? "";
+    stationLongitude.value = station.longitude ?? "";
+    stationExtraField.value = isRefuel
+      ? station.fuelType || ""
+      : station.stationType || "";
+
+    updateStationExtraFieldLabel();
+
+    stationFormTitle.textContent = `Edit Station #${station.id}`;
+    saveStationBtn.textContent = "Update Station";
   }
 
-  function clearRefuelStationForm() {
-    document.getElementById("refuelStationName").value = "";
-    document.getElementById("refuelStationLatitude").value = "";
-    document.getElementById("refuelStationLongitude").value = "";
-    document.getElementById("refuelFuelType").value = "";
+  function deleteBus(busId) {
+    const confirmed = confirm("Delete this bus?");
+    if (!confirmed) return;
+
+    const deleted = App.busManager.removeBus(busId);
+
+    if (!deleted) {
+      alert("Failed to delete bus.");
+      return;
+    }
+
+    if (editingBusId.value === String(busId)) {
+      resetBusForm();
+    }
+
+    renderBuses();
+    alert("Bus deleted successfully.");
+  }
+
+  function deleteStation(stationId) {
+    const confirmed = confirm("Delete this station?");
+    if (!confirmed) return;
+
+    const deleted = App.stationManager.removeStation(stationId);
+
+    if (!deleted) {
+      alert("Failed to delete station.");
+      return;
+    }
+
+    if (editingStationId.value === String(stationId)) {
+      resetStationForm();
+    }
+
+    renderStations();
+    alert("Station deleted successfully.");
+  }
+
+  function resetBusForm() {
+    editingBusId.value = "";
+    busMake.value = "";
+    busModel.value = "";
+    busType.value = "";
+    busFuelType.value = "";
+    busFuelTankSize.value = "";
+    busFuelBurnRate.value = "";
+    busCruiseSpeed.value = "";
+
+    busFormTitle.textContent = "Add Bus";
+    saveBusBtn.textContent = "Save Bus";
+  }
+
+  function resetStationForm() {
+    editingStationId.value = "";
+    stationMode.value = "bus";
+    stationName.value = "";
+    stationLatitude.value = "";
+    stationLongitude.value = "";
+    stationExtraField.value = "";
+
+    updateStationExtraFieldLabel();
+
+    stationFormTitle.textContent = "Add Station";
+    saveStationBtn.textContent = "Save Station";
+  }
+
+  function updateStationExtraFieldLabel() {
+    if (stationMode.value === "refuel") {
+      stationExtraField.placeholder = "Fuel Type";
+    } else {
+      stationExtraField.placeholder = "Station Type";
+    }
   }
 });

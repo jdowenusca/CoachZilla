@@ -1,37 +1,56 @@
-<!-- Author: Judah Owen -->
-<!-- Edited by: (editor name)-->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoachZilla - Admin Dashboard</title>
-    <link rel="stylesheet" href="../css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoachZilla - Admin Dashboard</title>
+  <link rel="stylesheet" href="../css/style.css">
 </head>
-
 <body>
+  <div class="admin-page-wrapper">
+    <header class="admin-header">
+      <h1 class="logo-text">CoachZilla</h1>
+    </header>
 
-    <h1>Admin Dashboard</h1>
+    <main class="admin-layout">
+      <section class="admin-top-actions">
+        <button id="goEditBtn" type="button">Edit Database</button>
+        <button id="goSearchBtn" type="button">Search Routes</button>
+        <button id="goAboutBtn" type="button">About</button>
+        <button id="logoutBtn" type="button">Logout</button>
+      </section>
 
-    <p id="adminWelcomeMessage"></p>
+      <section id="adminWelcome"></section>
 
-    <div class="admin-actions">
-        <button id="goEditBtn">Edit Data</button>
-        <button id="goAboutBtn">About</button>
-        <button id="logoutBtn">Logout</button>
-    </div>
+      <section>
+        <h2>System Summary</h2>
+        <div id="summaryCards" class="admin-summary-grid"></div>
+      </section>
 
-    <h2>Users</h2>
-    <div id="adminUsersList"></div>
+      <section class="admin-data-grid">
+        <div>
+          <h2>Recent Users</h2>
+          <div id="recentUsersList"></div>
+        </div>
 
-    <h2>Buses</h2>
-    <div id="adminBusesList"></div>
+        <div>
+          <h2>Recent Buses</h2>
+          <div id="recentBusesList"></div>
+        </div>
 
-    <h2>Stations</h2>
-    <div id="adminStationsList"></div>
+        <div>
+          <h2>Recent Stations</h2>
+          <div id="recentStationsList"></div>
+        </div>
 
-    <script type="module" src="../js/pages/adminPage.js"></script>
+        <div>
+          <h2>Recent Travel Plans</h2>
+          <div id="recentPlansList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="../js/pages/adminPage.js"></script>
 </body>
-
 </html>

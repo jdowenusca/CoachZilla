@@ -1,74 +1,81 @@
-<!-- Author: Judah Owen -->
-<!-- Edited by: (editor name)-->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoachZilla - Edit Database</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
-
 <body>
 
-    <button id="about-btn">About</button>
-
     <div class="edit-page-wrapper">
-
         <header class="edit-header">
             <h1 class="logo-text">CoachZilla</h1>
         </header>
 
         <main class="edit-layout">
-
             <h1>Edit Data</h1>
 
             <div class="edit-actions">
-                <button id="backToAdminBtn">Back to Admin</button>
-                <button id="goAboutBtn">About</button>
-                <button id="logoutBtn">Logout</button>
+                <button id="backToAdminBtn" type="button">Back to Admin</button>
+                <button id="goAboutBtn" type="button">About</button>
+                <button id="logoutBtn" type="button">Logout</button>
             </div>
 
-            <h2>Add Bus</h2>
-            <div class="form-section">
-                <input type="text" id="busMake" placeholder="Make">
-                <input type="text" id="busModel" placeholder="Model">
-                <input type="text" id="busType" placeholder="Type">
-                <input type="text" id="busFuelType" placeholder="Fuel Type">
-                <input type="number" id="busFuelTankSize" placeholder="Fuel Tank Size">
-                <input type="number" id="busFuelBurnRate" placeholder="Fuel Burn Rate">
-                <input type="number" id="busCruiseSpeed" placeholder="Cruise Speed">
-                <button id="addBusBtn">Add Bus</button>
-            </div>
+            <section class="edit-grid">
+                <div class="edit-column">
 
-            <h2>Add Bus Station</h2>
-            <div class="form-section">
-                <input type="text" id="busStationName" placeholder="Station Name">
-                <input type="number" step="any" id="busStationLatitude" placeholder="Latitude">
-                <input type="number" step="any" id="busStationLongitude" placeholder="Longitude">
-                <input type="text" id="busStationType" placeholder="Station Type">
-                <button id="addBusStationBtn">Add Bus Station</button>
-            </div>
+                    <h2 id="busFormTitle">Add Bus</h2>
+                    <div class="form-section">
+                        <input type="hidden" id="editingBusId">
 
-            <h2>Add Refuel Station</h2>
-            <div class="form-section">
-                <input type="text" id="refuelStationName" placeholder="Station Name">
-                <input type="number" step="any" id="refuelStationLatitude" placeholder="Latitude">
-                <input type="number" step="any" id="refuelStationLongitude" placeholder="Longitude">
-                <input type="text" id="refuelFuelType" placeholder="Fuel Type">
-                <button id="addRefuelStationBtn">Add Refuel Station</button>
-            </div>
+                        <input type="text" id="busMake" placeholder="Make">
+                        <input type="text" id="busModel" placeholder="Model">
+                        <input type="text" id="busType" placeholder="Type">
+                        <input type="text" id="busFuelType" placeholder="Fuel Type">
+                        <input type="number" id="busFuelTankSize" placeholder="Fuel Tank Size">
+                        <input type="number" id="busFuelBurnRate" placeholder="Fuel Burn Rate">
+                        <input type="number" id="busCruiseSpeed" placeholder="Cruise Speed">
 
-            <h2>Current Buses</h2>
-            <div id="editBusesList"></div>
+                        <div class="edit-form-actions">
+                            <button id="saveBusBtn" type="button">Save Bus</button>
+                            <button id="cancelBusEditBtn" type="button">Cancel Edit</button>
+                        </div>
+                    </div>
 
-            <h2>Current Stations</h2>
-            <div id="editStationsList"></div>
+                    <h2 id="stationFormTitle">Add Station</h2>
+                    <div class="form-section">
+                        <input type="hidden" id="editingStationId">
+
+                        <select id="stationMode">
+                            <option value="bus">Bus Station</option>
+                            <option value="refuel">Refuel Station</option>
+                        </select>
+
+                        <input type="text" id="stationName" placeholder="Station Name">
+                        <input type="number" step="any" id="stationLatitude" placeholder="Latitude">
+                        <input type="number" step="any" id="stationLongitude" placeholder="Longitude">
+                        <input type="text" id="stationExtraField" placeholder="Station Type">
+
+                        <div class="edit-form-actions">
+                            <button id="saveStationBtn" type="button">Save Station</button>
+                            <button id="cancelStationEditBtn" type="button">Cancel Edit</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="edit-column">
+                    <h2>Current Buses</h2>
+                    <div id="editBusesList"></div>
+
+                    <h2>Current Stations</h2>
+                    <div id="editStationsList"></div>
+                </div>
+            </section>
         </main>
     </div>
 
     <script type="module" src="../js/pages/editPage.js"></script>
 </body>
-
 </html>
