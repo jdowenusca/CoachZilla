@@ -14,6 +14,7 @@ export const App = {
   travelPlanManager: new TravelPlanManager(),
 
   currentUser: null,
+  currentTravelPlan: null,
 
   init() {
     console.log("App initialized");

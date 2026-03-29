@@ -1,5 +1,3 @@
-<!-- Author: Judah Owen -->
-<!-- Edited by: (editor name)-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,28 +9,46 @@
 </head>
 
 <body>
-
     <div class="travel-page-wrapper">
-
         <header class="travel-header">
             <h1 class="logo-text">CoachZilla</h1>
         </header>
 
         <main class="travel-layout">
-            <h1>Travel Plan</h1>
+            <section class="travel-page-actions">
+                <button id="backHomeBtn" type="button">Home</button>
+                <button id="goSearchBtn" type="button">Search</button>
+                <button id="goAboutBtn" type="button">About</button>
+                <button id="logoutBtn" type="button">Logout</button>
+            </section>
 
-            <div id="travelPlanContainer"></div>
+            <section class="travel-main-grid">
+                <div class="travel-column">
+                    <h1>Travel Plan</h1>
 
-            <select id="statusSelect">
-                <option value="planned">Planned</option>
-                <option value="in-progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-            </select>
+                    <div id="travelPlanContainer"></div>
 
-            <button id="updateStatusBtn">Update Status</button>
-            <button id="deletePlanBtn">Delete Plan</button>
+                    <div class="travel-status-controls">
+                        <label for="statusSelect"><strong>Update Status</strong></label>
+                        <select id="statusSelect">
+                            <option value="planned">Planned</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
 
+                        <div class="travel-button-row">
+                            <button id="updateStatusBtn" type="button">Update Status</button>
+                            <button id="deletePlanBtn" type="button">Delete Plan</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="travel-column">
+                    <h2>Route Legs</h2>
+                    <div id="routeLegsContainer"></div>
+                </div>
+            </section>
         </main>
     </div>
 

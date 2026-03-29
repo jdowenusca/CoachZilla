@@ -1,43 +1,84 @@
-<!-- Author: Judah Owen -->
-<!-- Edited by: (editor name)-->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoachZilla - Search Routes</title>
+
     <link rel="stylesheet" href="../css/style.css">
+    <!-- Leaflet CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    >
 </head>
 
 <body>
-
-    <button id="about-btn">About</button>
-
     <div class="search-page-wrapper">
-
         <header class="search-header">
             <h1 class="logo-text">CoachZilla</h1>
         </header>
 
-        <main class="search-layout">
-            <h1>Search Routes</h1>
+        <main class="search-layout search-layout-map">
+            <section class="search-panel">
+                <h1>Search Routes</h1>
 
-            <div class="search-actions">
-                <button id="backHomeBtn">Home</button>
-                <button id="goTravelBtn">Travel Plan</button>
-                <button id="goAboutBtn">About</button>
-                <button id="logoutBtn">Logout</button>
-            </div>
+                <div class="search-actions">
+                    <button id="backHomeBtn">Home</button>
+                    <button id="goTravelBtn">Travel Plan</button>
+                    <button id="goAboutBtn">About</button>
+                    <button id="logoutBtn">Logout</button>
+                </div>
 
-            <input type="text" id="stationSearchInput" placeholder="Search stations by name">
+                <div class="search-form-block">
+                    <label for="busSelect"><strong>Select Bus</strong></label>
+                    <select id="busSelect">
+                        <option value="">-- Select a Bus --</option>
+                    </select>
+                </div>
 
-            <h2>Available Stations</h2>
-            <div id="stationsSearchList"></div>
+                <div class="search-form-block">
+                    <label for="stationSearchInput"><strong>Filter Stations</strong></label>
+                    <input
+                        type="text"
+                        id="stationSearchInput"
+                        placeholder="Search stations by name or type"
+                    >
+                </div>
+
+                <div class="selected-route-panel">
+                    <h2>Selected Route Stops</h2>
+                    <p class="route-help-text">
+                        Click stations from the list or the map to add them in order.
+                        The first stop is your start, the last stop is your end.
+                    </p>
+                    <div id="selectedRouteList"></div>
+                    <div class="selected-route-actions">
+                        <button id="clearRouteBtn" type="button">Clear Route</button>
+                    </div>
+                </div>
+
+                <div class="search-form-block">
+                    <button id="buildRouteBtn" type="button">Build Route</button>
+                </div>
+
+                <h2>Available Stations</h2>
+                <div id="stationsSearchList"></div>
+            </section>
+
+            <section class="map-panel">
+                <div id="stationMap"></div>
+            </section>
         </main>
     </div>
 
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
     <script type="module" src="../js/pages/searchPage.js"></script>
 </body>
-
 </html>

@@ -1,5 +1,3 @@
-// js/pages/travelPage.js
-
 import { App } from "../app/app.js";
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -28,6 +26,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const logoutBtn = document.getElementById("logoutBtn");
 
   const travelPlanContainer = document.getElementById("travelPlanContainer");
+  const routeLegsContainer = document.getElementById("routeLegsContainer");
   const updateStatusBtn = document.getElementById("updateStatusBtn");
   const deletePlanBtn = document.getElementById("deletePlanBtn");
   const statusSelect = document.getElementById("statusSelect");
@@ -41,13 +40,17 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  if (activePlan.userId !== storedUser.userID) {
+  if (String(activePlan.userId) !== String(storedUser.userID)) {
     alert("You do not have access to this travel plan.");
     window.location.href = "search.html";
     return;
   }
 
   renderTravelPlan(activePlan);
+
+  if (statusSelect) {
+    statusSelect.value = activePlan.status || "planned";
+  }
 
   if (backHomeBtn) {
     backHomeBtn.addEventListener("click", () => {
@@ -96,6 +99,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
       activePlan = updatedPlan;
       renderTravelPlan(activePlan);
+      statusSelect.value = activePlan.status || "planned";
       alert("Travel plan status updated.");
     });
   }
@@ -114,43 +118,127 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderTravelPlan(plan) {
-    if (!travelPlanContainer) return;
+    if (!travelPlanContainer || !routeLegsContainer) return;
 
     const route = plan.route || {};
-    const legs = route.legs || [];
+    const legs = Array.isArray(route.legs) ? route.legs : [];
+
+    const bus = App.busManager.getAllBuses().find(
+      (b) => String(b.id) === String(plan.selectedBusId)
+    );
+
+    const selectedStations = Array.isArray(plan.destinations)
+      ? plan.destinations
+          .map((stationId) => App.stationManager.findStationByID(stationId))
+          .filter(Boolean)
+      : [];
 
     travelPlanContainer.innerHTML = `
       <div class="admin-card">
         <p><strong>Plan ID:</strong> ${plan.travelPlanId}</p>
-        <p><strong>Status:</strong> ${plan.status}</p>
-        <p><strong>Bus ID:</strong> ${plan.selectedBusId}</p>
-        <p><strong>Total Distance:</strong> ${route.totalDistance ?? 0}</p>
-        <p><strong>Total Time:</strong> ${route.totalTime ?? 0}</p>
-        <p><strong>Created:</strong> ${plan.createdAt || "N/A"}</p>
-        <p><strong>Updated:</strong> ${plan.updatedAt || "N/A"}</p>
+        <p><strong>Status:</strong> ${formatStatus(plan.status)}</p>
+        <p><strong>Bus:</strong> ${formatBus(bus, plan.selectedBusId)}</p>
+        <p><strong>Total Distance:</strong> ${formatNumber(route.totalDistance)} map units</p>
+        <p><strong>Total Time:</strong> ${formatNumber(route.totalTime)} hours</p>
+        <p><strong>Stops Selected:</strong> ${selectedStations.length}</p>
+        <p><strong>Created:</strong> ${formatDate(plan.createdAt)}</p>
+        <p><strong>Updated:</strong> ${formatDate(plan.updatedAt)}</p>
       </div>
 
-      <h3>Route Legs</h3>
+      <div class="admin-card">
+        <h3>Selected Stops</h3>
+        ${
+          selectedStations.length === 0
+            ? "<p>No selected stops found.</p>"
+            : selectedStations
+                .map((station, index) => {
+                  let roleLabel = "Stop";
 
-      ${
-        legs.length === 0
-          ? "<p>No route legs found.</p>"
-          : legs
-              .map(
-                (leg, index) => `
-                  <div class="admin-card">
-                    <p><strong>Leg ${index + 1}</strong></p>
-                    <p><strong>Start Station ID:</strong> ${leg.startStationId}</p>
-                    <p><strong>End Station ID:</strong> ${leg.endStationId}</p>
-                    <p><strong>Distance:</strong> ${leg.distance}</p>
-                    <p><strong>Time:</strong> ${leg.timeToDestination}</p>
-                    <p><strong>Heading:</strong> ${leg.heading}</p>
-                    <p><strong>Refuel Stop:</strong> ${leg.isRefuelStop ? "Yes" : "No"}</p>
-                  </div>
-                `
-              )
-              .join("")
-      }
+                  if (index === 0) roleLabel = "Start";
+                  else if (index === selectedStations.length - 1) roleLabel = "End";
+                  else roleLabel = `Stop ${index}`;
+
+                  const typeLabel = station.stationType || station.fuelType || "Station";
+
+                  return `
+                    <p>
+                      <strong>${roleLabel}:</strong>
+                      ${station.name}
+                      (${typeLabel})
+                    </p>
+                  `;
+                })
+                .join("")
+        }
+      </div>
     `;
+
+    routeLegsContainer.innerHTML =
+      legs.length === 0
+        ? `<div class="admin-card"><p>No route legs found.</p></div>`
+        : legs
+            .map((leg, index) => {
+              const startName = leg.startStation?.name || "Unknown Start";
+              const endName = leg.endStation?.name || "Unknown End";
+
+              const startType =
+                leg.startStation?.stationType ||
+                leg.startStation?.fuelType ||
+                "Station";
+
+              const endType =
+                leg.endStation?.stationType ||
+                leg.endStation?.fuelType ||
+                "Station";
+
+              return `
+                <div class="admin-card">
+                  <p><strong>Leg ${index + 1}</strong></p>
+                  <p><strong>From:</strong> ${startName} (${startType})</p>
+                  <p><strong>To:</strong> ${endName} (${endType})</p>
+                  <p><strong>Distance:</strong> ${formatNumber(leg.distance)} map units</p>
+                  <p><strong>Time:</strong> ${formatNumber(leg.timeToDestination)} hours</p>
+                  <p><strong>Heading:</strong> ${formatNumber(leg.heading)}°</p>
+                  <p><strong>Refuel Stop:</strong> ${leg.isRefuelStop ? "Yes" : "No"}</p>
+                </div>
+              `;
+            })
+            .join("");
+  }
+
+  function formatBus(bus, fallbackBusId) {
+    if (!bus) {
+      return `Bus ID ${fallbackBusId}`;
+    }
+
+    return `${bus.make} ${bus.model} (${bus.fuelType})`;
+  }
+
+  function formatStatus(status) {
+    if (!status) return "Unknown";
+
+    return String(status)
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+
+  function formatNumber(value) {
+    const numericValue = Number(value);
+
+    if (Number.isNaN(numericValue)) {
+      return "0.00";
+    }
+
+    return numericValue.toFixed(2);
+  }
+
+  function formatDate(value) {
+    if (!value) return "N/A";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+
+    return date.toLocaleString();
   }
 });
