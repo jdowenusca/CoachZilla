@@ -214,6 +214,7 @@ Do not change everything at once.
 - then improve other calculations
 
 # Files Most Relevant to You
+
 ## Core logic
 - js/managers/RoutePlanner.js
 ## Map integration
