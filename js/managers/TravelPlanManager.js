@@ -2,25 +2,40 @@ import TravelPlan from "../models/TravelPlan.js";
 import RoutePlanner from "./RoutePlanner.js";
 
 export default class TravelPlanManager {
-    constructor() {
+    constructor(firestoreService) {
+        this.firestoreService = firestoreService;
         this.storageKey = "travelPlans";
         this.routePlanner = new RoutePlanner();
+        this.travelPlans = [];
     }
 
-    // --- INTERNAL STORAGE HELPERS ---
-
-    loadPlans() {
-        const data = localStorage.getItem(this.storageKey);
-        return data ? JSON.parse(data) : [];
+    async init() {
+        this.travelPlans = await this.loadPlans();
     }
 
-    savePlans(plans) {
-        localStorage.setItem(this.storageKey, JSON.stringify(plans));
+    async loadPlans() {
+        const rawPlans = await this.firestoreService.getCollection(this.storageKey);
+        return rawPlans.map((plan) =>
+            new TravelPlan(
+                plan.id || plan.travelPlanId,
+                plan.userId,
+                plan.selectedBusId,
+                plan.destinations,
+                plan.route,
+                plan.status || "planned",
+                plan.createdAt,
+                plan.updatedAt
+            )
+        );
+    }
+
+    async savePlan(plan) {
+        await this.firestoreService.saveDocument(this.storageKey, plan.travelPlanId, plan);
     }
 
     // --- CREATE ---
 
-    createTravelPlan(userId, bus, destinationIds, allStations) {
+    async createTravelPlan(userId, bus, destinationIds, allStations) {
         if (!userId || !bus || !destinationIds || destinationIds.length < 2) {
             throw new Error("Invalid travel plan input");
         }
@@ -35,10 +50,8 @@ export default class TravelPlanManager {
             route
         );
 
-        const plans = this.loadPlans();
-        plans.push(newPlan);
-
-        this.savePlans(plans);
+        this.travelPlans.push(newPlan);
+        await this.savePlan(newPlan);
 
         return newPlan;
     }
@@ -46,48 +59,44 @@ export default class TravelPlanManager {
     // --- READ ---
 
     getAllPlans() {
-        return this.loadPlans();
+        return this.travelPlans;
     }
 
     getPlansByUser(userId) {
-        return this.loadPlans().filter(plan => plan.userId === userId);
+        return this.travelPlans.filter(plan => String(plan.userId) === String(userId));
     }
 
     getPlanById(planId) {
-        return this.loadPlans().find(plan => plan.travelPlanId === planId);
+        return this.travelPlans.find(plan => String(plan.travelPlanId) === String(planId)) || null;
     }
 
     // --- UPDATE ---
 
-    updatePlanStatus(planId, newStatus) {
-        const plans = this.loadPlans();
-
-        const plan = plans.find(p => p.travelPlanId === planId);
+    async updatePlanStatus(planId, newStatus) {
+        const plan = this.getPlanById(planId);
         if (!plan) return null;
 
         plan.status = newStatus;
         plan.updatedAt = new Date().toISOString();
 
-        this.savePlans(plans);
-
+        await this.savePlan(plan);
         return plan;
     }
 
     // --- DELETE ---
 
-    deletePlan(planId) {
-        const plans = this.loadPlans();
-        const updatedPlans = plans.filter(p => p.travelPlanId !== planId);
+    async deletePlan(planId) {
+        this.travelPlans = this.travelPlans.filter(
+            (plan) => String(plan.travelPlanId) !== String(planId)
+        );
 
-        this.savePlans(updatedPlans);
+        await this.firestoreService.deleteDocument(this.storageKey, planId);
     }
 
     // --- OPTIONAL: REBUILD ROUTE ---
 
-    rebuildRoute(planId, bus, destinationIds, allStations) {
-        const plans = this.loadPlans();
-
-        const plan = plans.find(p => p.travelPlanId === planId);
+    async rebuildRoute(planId, bus, destinationIds, allStations) {
+        const plan = this.getPlanById(planId);
         if (!plan) return null;
 
         const newRoute = this.routePlanner.buildRoute(bus, destinationIds, allStations);
@@ -96,8 +105,7 @@ export default class TravelPlanManager {
         plan.destinations = destinationIds;
         plan.updatedAt = new Date().toISOString();
 
-        this.savePlans(plans);
-
+        await this.savePlan(plan);
         return plan;
     }
 }

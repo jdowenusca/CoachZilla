@@ -1,9 +1,9 @@
 import { App } from "../app/app.js";
 
-window.addEventListener("DOMContentLoaded", () => {
-  App.init();
+window.addEventListener("DOMContentLoaded", async () => {
+  await App.init();
 
-  const storedUser = JSON.parse(localStorage.getItem("currentUser"));
+  const storedUser = App.currentUser || (await App.authService.getCurrentUserProfile());
 
   if (!storedUser) {
     alert("You must be logged in to view this page.");
@@ -69,8 +69,8 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     if (logoutBtn) {
-      logoutBtn.addEventListener("click", () => {
-        localStorage.removeItem("currentUser");
+      logoutBtn.addEventListener("click", async () => {
+        await App.authService.signOut();
         App.currentUser = null;
         window.location.href = "index.html";
       });
@@ -101,7 +101,7 @@ window.addEventListener("DOMContentLoaded", () => {
     updateStationExtraFieldLabel();
   }
 
-  function handleSaveBus() {
+  async function handleSaveBus() {
     const make = busMake.value.trim();
     const model = busModel.value.trim();
     const type = busType.value.trim();
@@ -131,7 +131,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const existingBusId = editingBusId.value.trim();
 
     if (existingBusId) {
-      const updatedBus = App.busManager.updateBus(existingBusId, {
+      const updatedBus = await App.busManager.updateBus(existingBusId, {
         make,
         model,
         type,
@@ -148,7 +148,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
       alert("Bus updated successfully.");
     } else {
-      App.busManager.addBus(
+      await App.busManager.addBus(
         make,
         model,
         type,
@@ -165,7 +165,7 @@ window.addEventListener("DOMContentLoaded", () => {
     renderBuses();
   }
 
-  function handleSaveStation() {
+  async function handleSaveStation() {
     const mode = stationMode.value;
     const name = stationName.value.trim();
     const latitude = Number(stationLatitude.value);
@@ -198,14 +198,14 @@ window.addEventListener("DOMContentLoaded", () => {
       let updatedStation = null;
 
       if (mode === "bus") {
-        updatedStation = App.stationManager.updateBusStation(existingStationId, {
+        updatedStation = await App.stationManager.updateBusStation(existingStationId, {
           name,
           latitude,
           longitude,
           stationType: extraValue
         });
       } else {
-        updatedStation = App.stationManager.updateRefuelStation(existingStationId, {
+        updatedStation = await App.stationManager.updateRefuelStation(existingStationId, {
           name,
           latitude,
           longitude,
@@ -221,9 +221,9 @@ window.addEventListener("DOMContentLoaded", () => {
       alert("Station updated successfully.");
     } else {
       if (mode === "bus") {
-        App.stationManager.addBusStation(name, latitude, longitude, extraValue);
+        await App.stationManager.addBusStation(name, latitude, longitude, extraValue);
       } else {
-        App.stationManager.addRefuelStation(name, latitude, longitude, extraValue);
+        await App.stationManager.addRefuelStation(name, latitude, longitude, extraValue);
       }
 
       alert("Station added successfully.");
@@ -366,11 +366,11 @@ window.addEventListener("DOMContentLoaded", () => {
     saveStationBtn.textContent = "Update Station";
   }
 
-  function deleteBus(busId) {
+  async function deleteBus(busId) {
     const confirmed = confirm("Delete this bus?");
     if (!confirmed) return;
 
-    const deleted = App.busManager.removeBus(busId);
+    const deleted = await App.busManager.removeBus(busId);
 
     if (!deleted) {
       alert("Failed to delete bus.");
@@ -385,11 +385,11 @@ window.addEventListener("DOMContentLoaded", () => {
     alert("Bus deleted successfully.");
   }
 
-  function deleteStation(stationId) {
+  async function deleteStation(stationId) {
     const confirmed = confirm("Delete this station?");
     if (!confirmed) return;
 
-    const deleted = App.stationManager.removeStation(stationId);
+    const deleted = await App.stationManager.removeStation(stationId);
 
     if (!deleted) {
       alert("Failed to delete station.");

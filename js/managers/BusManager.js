@@ -1,21 +1,24 @@
 import Bus from "../models/Bus.js";
 
 export default class BusManager {
-  constructor(storageKey = "coachzilla_buses") {
+  constructor(firestoreService, storageKey = "buses") {
+    this.firestoreService = firestoreService;
     this.storageKey = storageKey;
-    this.buses = this.loadBuses();
+    this.buses = [];
   }
 
-  loadBuses() {
-    const storedBuses = localStorage.getItem(this.storageKey);
+  async init() {
+    this.buses = await this.loadBuses();
+  }
 
-    if (!storedBuses) {
+  async loadBuses() {
+    const rawBuses = await this.firestoreService.getCollection(this.storageKey);
+
+    if (!rawBuses || rawBuses.length === 0) {
       return [];
     }
 
-    const parsedBuses = JSON.parse(storedBuses);
-
-    return parsedBuses.map(
+    return rawBuses.map(
       (bus) =>
         new Bus(
           bus.id,
@@ -30,8 +33,18 @@ export default class BusManager {
     );
   }
 
-  saveBuses() {
-    localStorage.setItem(this.storageKey, JSON.stringify(this.buses));
+  async saveBus(bus) {
+    await this.firestoreService.saveDocument(this.storageKey, bus.id, {
+      id: bus.id,
+      make: bus.make,
+      model: bus.model,
+      type: bus.type,
+      fuelType: bus.fuelType,
+      fuelTankSize: bus.fuelTankSize,
+      fuelBurnRate: bus.fuelBurnRate,
+      cruiseSpeed: bus.cruiseSpeed,
+      updatedAt: new Date().toISOString()
+    });
   }
 
   generateBusID() {
@@ -43,9 +56,9 @@ export default class BusManager {
     return maxID + 1;
   }
 
-  addBus(make, model, type, fuelType, fuelTankSize, fuelBurnRate, cruiseSpeed) {
+  async addBus(make, model, type, fuelType, fuelTankSize, fuelBurnRate, cruiseSpeed) {
     const newBus = new Bus(
-      this.generateBusID(),
+      await this.generateBusID(),
       make,
       model,
       type,
@@ -56,23 +69,23 @@ export default class BusManager {
     );
 
     this.buses.push(newBus);
-    this.saveBuses();
+    await this.saveBus(newBus);
     return newBus;
   }
 
-  removeBus(busID) {
+  async removeBus(busID) {
     const initialLength = this.buses.length;
-    this.buses = this.buses.filter((bus) => Number(bus.getID()) !== Number(busID));
+    this.buses = this.buses.filter((bus) => String(bus.getID()) !== String(busID));
 
     if (this.buses.length !== initialLength) {
-      this.saveBuses();
+      await this.firestoreService.deleteDocument(this.storageKey, busID);
       return true;
     }
 
     return false;
   }
 
-  updateBus(busID, updatedFields = {}) {
+  async updateBus(busID, updatedFields = {}) {
     const bus = this.findBusByID(busID);
 
     if (!bus) {
@@ -107,7 +120,7 @@ export default class BusManager {
       bus.setCruiseSpeed(Number(updatedFields.cruiseSpeed));
     }
 
-    this.saveBuses();
+    await this.saveBus(bus);
     return bus;
   }
 

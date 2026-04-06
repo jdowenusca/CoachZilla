@@ -1,64 +1,78 @@
 import User from "../models/User.js";
 
 export default class AccountManager {
-  constructor(storageKey = "coachzilla_users") {
-    this.storageKey = storageKey;
-    this.users = this.loadUsers();
+  constructor(firestoreService) {
+    this.firestoreService = firestoreService;
+    this.users = [];
   }
 
-  loadUsers() {
-    const storedUsers = localStorage.getItem(this.storageKey);
+  async init() {
+    this.users = await this.loadUsers();
+  }
 
-    if (!storedUsers) {
-      return [];
-    }
-
-    const parsedUsers = JSON.parse(storedUsers);
-
-    return parsedUsers.map(
-      (user) => new User(user.userID, user.username, user.password, user.role)
+  async loadUsers() {
+    const rawUsers = await this.firestoreService.getCollection("users");
+    return rawUsers.map(
+      (user) =>
+        new User(
+          user.uid || user.id || user.userID,
+          user.username,
+          user.password || "",
+          user.role || "user",
+          user.firstName || "",
+          user.lastName || ""
+        )
     );
   }
 
-  saveUsers() {
-    localStorage.setItem(this.storageKey, JSON.stringify(this.users));
-  }
-
-  generateUserID() {
-    if (this.users.length === 0) {
-      return 1;
-    }
-
-    const maxID = Math.max(...this.users.map((user) => Number(user.getUserID())));
-    return maxID + 1;
-  }
-
-  addUser(username, password, role = "user") {
-    const existingUser = this.findUserByUsername(username);
-
-    if (existingUser) {
+  async addUserProfile(profile) {
+    if (!profile || !profile.userID) {
       return null;
     }
 
-    const newUser = new User(this.generateUserID(), username, password, role);
-    this.users.push(newUser);
-    this.saveUsers();
-    return newUser;
+    const normalizedProfile = {
+      uid: profile.userID,
+      userID: profile.userID,
+      username: profile.username,
+      firstName: profile.firstName || "",
+      lastName: profile.lastName || "",
+      role: profile.role || "user",
+      createdAt: profile.createdAt || new Date().toISOString(),
+      updatedAt: profile.updatedAt || new Date().toISOString()
+    };
+
+    await this.firestoreService.saveDocument("users", normalizedProfile.userID, normalizedProfile);
+
+    const createdUser = new User(
+      normalizedProfile.userID,
+      normalizedProfile.username,
+      profile.password || "",
+      normalizedProfile.role,
+      normalizedProfile.firstName,
+      normalizedProfile.lastName
+    );
+
+    this.users = this.users.filter(
+      (user) => String(user.userID) !== String(createdUser.userID)
+    );
+    this.users.push(createdUser);
+
+    return createdUser;
   }
 
-  removeUser(userID) {
+  async removeUser(userID) {
     const initialLength = this.users.length;
-    this.users = this.users.filter((user) => Number(user.getUserID()) !== Number(userID));
+    this.users = this.users.filter((user) => String(user.userID) !== String(userID));
 
     if (this.users.length !== initialLength) {
-      this.saveUsers();
+      await this.firestoreService.deleteDocument("users", userID);
       return true;
     }
 
     return false;
   }
 
-  updateUser(userID, updatedFields = {}) {
+  async updateUser(userID, updatedFields = {}) {
     const user = this.findUserByID(userID);
 
     if (!user) {
@@ -77,52 +91,46 @@ export default class AccountManager {
       user.setRole(updatedFields.role);
     }
 
-    this.saveUsers();
+    if (updatedFields.firstName !== undefined) {
+      user.setFirstName(updatedFields.firstName);
+    }
+
+    if (updatedFields.lastName !== undefined) {
+      user.setLastName(updatedFields.lastName);
+    }
+
+    await this.firestoreService.saveDocument("users", user.userID, {
+      userID: user.userID,
+      username: user.username,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      updatedAt: new Date().toISOString()
+    });
+
     return user;
   }
 
   findUserByID(userID) {
-    return this.users.find((user) => Number(user.getUserID()) === Number(userID)) || null;
+    return this.users.find((user) => String(user.userID) === String(userID)) || null;
   }
 
   findUserByUsername(username) {
     return (
       this.users.find(
-        (user) => user.getUsername().toLowerCase() === username.toLowerCase()
+        (user) => String(user.username).toLowerCase() === String(username).toLowerCase()
       ) || null
     );
   }
 
-  validateLogin(username, password) {
-    const user = this.findUserByUsername(username);
-
-    if (!user) {
-      return null;
-    }
-
-    if (user.getPassword() === password) {
-      return user;
-    }
-
-    return null;
-  }
-
-  getAllUsers() {
+getAllUsers() {
     return this.users;
   }
 
-  ensureDefaultAdmin() {
-    const adminExists = this.users.some(
-      (user) => user.getRole().toLowerCase() === "admin"
+  // Add this new method to fix the app.js crash
+  async getUsersByRole(role) {
+    return this.users.filter(
+      (user) => String(user.role).toLowerCase() === String(role).toLowerCase()
     );
-
-    if (!adminExists) {
-      const defaultAdmin = new User(this.generateUserID(), "admin", "admin123", "admin");
-      this.users.push(defaultAdmin);
-      this.saveUsers();
-      return defaultAdmin;
-    }
-
-    return null;
   }
 }

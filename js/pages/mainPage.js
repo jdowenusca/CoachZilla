@@ -2,8 +2,8 @@
 
 import { App } from "../app/app.js";
 
-window.addEventListener("DOMContentLoaded", () => {
-  App.init();
+window.addEventListener("DOMContentLoaded", async () => {
+  await App.init();
 
   const welcomeMessage = document.getElementById("welcomeMessage");
   const goSearchBtn = document.getElementById("goSearchBtn");
@@ -11,7 +11,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const goAboutBtn = document.getElementById("goAboutBtn");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  const storedUser = JSON.parse(localStorage.getItem("currentUser"));
+  const storedUser = App.currentUser || (await App.authService.getCurrentUserProfile());
 
   if (!storedUser) {
     alert("You must be logged in to view this page.");
@@ -46,8 +46,8 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("currentUser");
+    logoutBtn.addEventListener("click", async () => {
+      await App.authService.signOut();
       App.currentUser = null;
       window.location.href = "index.html";
     });

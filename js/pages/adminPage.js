@@ -1,9 +1,9 @@
 import { App } from "../app/app.js";
 
-window.addEventListener("DOMContentLoaded", () => {
-  App.init();
+window.addEventListener("DOMContentLoaded", async () => {
+  await App.init();
 
-  const storedUser = JSON.parse(localStorage.getItem("currentUser"));
+  const storedUser = App.currentUser || (await App.authService.getCurrentUserProfile());
 
   if (!storedUser) {
     alert("You must be logged in to view this page.");
@@ -60,9 +60,8 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     if (logoutBtn) {
-      logoutBtn.addEventListener("click", () => {
-        localStorage.removeItem("currentUser");
-        localStorage.removeItem("activeTravelPlanId");
+      logoutBtn.addEventListener("click", async () => {
+        await App.authService.signOut();
         App.currentUser = null;
         window.location.href = "index.html";
       });
@@ -86,7 +85,7 @@ window.addEventListener("DOMContentLoaded", () => {
   function renderSummary() {
     if (!summaryCards) return;
 
-    const users = getUsers();
+    const users = App.accountManager.getAllUsers();
     const buses = App.busManager.getAllBuses();
     const stations = App.stationManager.getAllStations();
     const plans = App.travelPlanManager.getAllPlans();
@@ -122,7 +121,7 @@ window.addEventListener("DOMContentLoaded", () => {
   function renderUsers() {
     if (!recentUsersList) return;
 
-    const users = getUsers();
+    const users = App.accountManager.getAllUsers();
 
     if (!users.length) {
       recentUsersList.innerHTML = `<p>No users found.</p>`;
@@ -238,14 +237,6 @@ window.addEventListener("DOMContentLoaded", () => {
       .join("");
   }
 
-  function getUsers() {
-    try {
-      return JSON.parse(localStorage.getItem("users")) || [];
-    } catch (error) {
-      console.error("Failed to load users:", error);
-      return [];
-    }
-  }
 
   function formatStatus(status) {
     if (!status) return "Unknown";

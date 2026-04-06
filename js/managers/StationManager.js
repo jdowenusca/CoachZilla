@@ -2,21 +2,24 @@ import BusStation from "../models/BusStation.js";
 import RefuelStation from "../models/RefuelStation.js";
 
 export default class StationManager {
-  constructor(storageKey = "coachzilla_stations") {
+  constructor(firestoreService, storageKey = "stations") {
+    this.firestoreService = firestoreService;
     this.storageKey = storageKey;
-    this.stations = this.loadStations();
+    this.stations = [];
   }
 
-  loadStations() {
-    const storedStations = localStorage.getItem(this.storageKey);
+  async init() {
+    this.stations = await this.loadStations();
+  }
 
-    if (!storedStations) {
+  async loadStations() {
+    const rawStations = await this.firestoreService.getCollection(this.storageKey);
+
+    if (!rawStations || rawStations.length === 0) {
       return [];
     }
 
-    const parsedStations = JSON.parse(storedStations);
-
-    return parsedStations.map((station) => {
+    return rawStations.map((station) => {
       if (station.fuelType !== undefined) {
         return new RefuelStation(
           station.id,
@@ -37,8 +40,16 @@ export default class StationManager {
     });
   }
 
-  saveStations() {
-    localStorage.setItem(this.storageKey, JSON.stringify(this.stations));
+ async saveStation(station) {
+    await this.firestoreService.saveDocument(this.storageKey, station.id, {
+      id: station.id,
+      name: station.name,
+      latitude: station.latitude,
+      longitude: station.longitude,
+      stationType: station.stationType || null, // Added fallback
+      fuelType: station.fuelType || null,       // Added fallback
+      updatedAt: new Date().toISOString()
+    });
   }
 
   generateStationID() {
@@ -50,7 +61,7 @@ export default class StationManager {
     return maxID + 1;
   }
 
-  addBusStation(name, latitude, longitude, stationType = "Bus Station") {
+  async addBusStation(name, latitude, longitude, stationType = "Bus Station") {
     const newStation = new BusStation(
       this.generateStationID(),
       name,
@@ -60,11 +71,11 @@ export default class StationManager {
     );
 
     this.stations.push(newStation);
-    this.saveStations();
+    await this.saveStation(newStation);
     return newStation;
   }
 
-  addRefuelStation(name, latitude, longitude, fuelType) {
+  async addRefuelStation(name, latitude, longitude, fuelType) {
     const newStation = new RefuelStation(
       this.generateStationID(),
       name,
@@ -74,18 +85,18 @@ export default class StationManager {
     );
 
     this.stations.push(newStation);
-    this.saveStations();
+    await this.saveStation(newStation);
     return newStation;
   }
 
-  removeStation(stationID) {
+  async removeStation(stationID) {
     const initialLength = this.stations.length;
     this.stations = this.stations.filter(
-      (station) => Number(station.getID()) !== Number(stationID)
+      (station) => String(station.getID()) !== String(stationID)
     );
 
     if (this.stations.length !== initialLength) {
-      this.saveStations();
+      await this.firestoreService.deleteDocument(this.storageKey, stationID);
       return true;
     }
 
@@ -110,7 +121,7 @@ export default class StationManager {
     return this.stations.filter((station) => station instanceof RefuelStation);
   }
 
-  updateBusStation(stationID, updatedFields = {}) {
+  async updateBusStation(stationID, updatedFields = {}) {
     const station = this.findStationByID(stationID);
 
     if (!station || !(station instanceof BusStation)) {
@@ -133,11 +144,11 @@ export default class StationManager {
       station.setStationType(updatedFields.stationType);
     }
 
-    this.saveStations();
+    await this.saveStation(station);
     return station;
   }
 
-  updateRefuelStation(stationID, updatedFields = {}) {
+  async updateRefuelStation(stationID, updatedFields = {}) {
     const station = this.findStationByID(stationID);
 
     if (!station || !(station instanceof RefuelStation)) {
@@ -160,7 +171,7 @@ export default class StationManager {
       station.setFuelType(updatedFields.fuelType);
     }
 
-    this.saveStations();
+    await this.saveStation(station);
     return station;
   }
 }

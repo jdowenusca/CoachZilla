@@ -2,14 +2,14 @@
 
 import { App } from "../app/app.js";
 
-window.addEventListener("DOMContentLoaded", () => {
-  App.init();
+window.addEventListener("DOMContentLoaded", async () => {
+  await App.init();
 
   const backBtn = document.getElementById("backBtn");
   const homeBtn = document.getElementById("homeBtn");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  const storedUser = JSON.parse(localStorage.getItem("currentUser"));
+  const storedUser = App.currentUser || (await App.authService.getCurrentUserProfile());
 
   if (storedUser) {
     App.currentUser = storedUser;
@@ -34,8 +34,8 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("currentUser");
+    logoutBtn.addEventListener("click", async () => {
+      await App.authService.signOut();
       App.currentUser = null;
       window.location.href = "index.html";
     });

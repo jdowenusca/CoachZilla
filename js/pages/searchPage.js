@@ -1,10 +1,10 @@
 import { App } from "../app/app.js";
 import LeafletMapService from "../services/LeafletMapService.js";
 
-window.addEventListener("DOMContentLoaded", () => {
-  App.init();
+window.addEventListener("DOMContentLoaded", async () => {
+  await App.init();
 
-  const storedUser = JSON.parse(localStorage.getItem("currentUser"));
+  const storedUser = App.currentUser || (await App.authService.getCurrentUserProfile());
 
   if (!storedUser) {
     alert("You must be logged in to view this page.");
@@ -26,7 +26,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const buildBtn = document.getElementById("buildRouteBtn");
   const clearRouteBtn = document.getElementById("clearRouteBtn");
 
-  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const currentUser = App.currentUser;
   const buses = App.busManager.getAllBuses();
   const allStations = App.stationManager.getAllStations();
 
@@ -34,6 +34,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   let filteredStations = [...allStations];
   let selectedDestinationIds = [];
+  let activeTravelPlanId = null;
 
   try {
     mapService.initializeMap("stationMap");
@@ -47,7 +48,7 @@ window.addEventListener("DOMContentLoaded", () => {
   refreshMap();
 
   if (buildBtn) {
-    buildBtn.addEventListener("click", () => {
+    buildBtn.addEventListener("click", async () => {
       try {
         const busId = busSelect.value;
         const selectedBus = buses.find((b) => String(b.id) === String(busId));
@@ -62,15 +63,15 @@ window.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        const newPlan = App.travelPlanManager.createTravelPlan(
+        const newPlan = await App.travelPlanManager.createTravelPlan(
           currentUser.userID,
           selectedBus,
           selectedDestinationIds,
           allStations
         );
 
-        localStorage.setItem("activeTravelPlanId", newPlan.travelPlanId);
-        window.location.href = "travel.html";
+        activeTravelPlanId = newPlan.travelPlanId;
+        window.location.href = `travel.html?planId=${encodeURIComponent(activeTravelPlanId)}`;
       } catch (err) {
         console.error(err);
         alert("Failed to create route.");
@@ -99,14 +100,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (goTravelBtn) {
     goTravelBtn.addEventListener("click", () => {
-      const activeTravelPlanId = localStorage.getItem("activeTravelPlanId");
-
       if (!activeTravelPlanId) {
         alert("Build a travel plan first.");
         return;
       }
 
-      window.location.href = "travel.html";
+      window.location.href = `travel.html?planId=${encodeURIComponent(activeTravelPlanId)}`;
     });
   }
 
@@ -117,9 +116,8 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("currentUser");
-      localStorage.removeItem("activeTravelPlanId");
+    logoutBtn.addEventListener("click", async () => {
+      await App.authService.signOut();
       App.currentUser = null;
       window.location.href = "index.html";
     });

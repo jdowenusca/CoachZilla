@@ -2,8 +2,8 @@
 
 import { App } from "../app/app.js";
 
-window.addEventListener("DOMContentLoaded", () => {
-  App.init();
+window.addEventListener("DOMContentLoaded", async () => {
+  await App.init();
 
   const usernameInput = document.getElementById("newUsername");
   const passwordInput = document.getElementById("newPassword");
@@ -12,7 +12,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const backToLoginBtn = document.getElementById("backToLoginBtn");
 
   if (createBtn) {
-    createBtn.addEventListener("click", () => {
+    createBtn.addEventListener("click", async () => {
       const username = usernameInput.value.trim();
       const password = passwordInput.value.trim();
 
@@ -21,19 +21,21 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const existingUser = App.accountManager
-        .getAllUsers()
-        .find(user => user.username === username);
+      const existingUser = App.accountManager.findUserByUsername(username);
 
       if (existingUser) {
         alert("That username is already taken.");
         return;
       }
 
-      App.accountManager.addUser(username, password, "user");
-
-      alert("Account created successfully.");
-      window.location.href = "index.html";
+      try {
+        await App.authService.signUp(username, password, "user");
+        alert("Account created successfully.");
+        window.location.href = "index.html";
+      } catch (error) {
+        console.error(error);
+        alert("Failed to create account. Please try again.");
+      }
     });
   }
 

@@ -2,8 +2,8 @@
 
 import { App } from "../app/app.js";
 
-window.addEventListener("DOMContentLoaded", () => {
-  App.init();
+window.addEventListener("DOMContentLoaded", async () => {
+  await App.init();
 
   const usernameInput = document.getElementById("username");
   const passwordInput = document.getElementById("password");
@@ -12,7 +12,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const aboutBtn = document.getElementById("aboutBtn");
 
   if (loginBtn) {
-    loginBtn.addEventListener("click", () => {
+    loginBtn.addEventListener("click", async () => {
       const username = usernameInput.value.trim();
       const password = passwordInput.value.trim();
 
@@ -21,18 +21,17 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const user = App.accountManager.validateLogin(username, password);
+      try {
+        const userProfile = await App.authService.signIn(username, password);
+        App.currentUser = userProfile;
 
-      if (user) {
-        App.currentUser = user;
-        localStorage.setItem("currentUser", JSON.stringify(user));
-
-        if (user.role === "admin") {
+        if (userProfile.role === "admin") {
           window.location.href = "admin.html";
         } else {
           window.location.href = "main.html";
         }
-      } else {
+      } catch (error) {
+        console.error(error);
         alert("Invalid username or password.");
       }
     });

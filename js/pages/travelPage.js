@@ -1,10 +1,11 @@
 import { App } from "../app/app.js";
 
-window.addEventListener("DOMContentLoaded", () => {
-  App.init();
+window.addEventListener("DOMContentLoaded", async () => {
+  await App.init();
 
-  const storedUser = JSON.parse(localStorage.getItem("currentUser"));
-  const activeTravelPlanId = localStorage.getItem("activeTravelPlanId");
+  const storedUser = App.currentUser || (await App.authService.getCurrentUserProfile());
+  const urlParams = new URLSearchParams(window.location.search);
+  const activeTravelPlanId = urlParams.get("planId");
 
   if (!storedUser) {
     alert("You must be logged in to view this page.");
@@ -35,7 +36,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (!activePlan) {
     alert("Travel plan not found.");
-    localStorage.removeItem("activeTravelPlanId");
     window.location.href = "search.html";
     return;
   }
@@ -75,19 +75,18 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("currentUser");
-      localStorage.removeItem("activeTravelPlanId");
+    logoutBtn.addEventListener("click", async () => {
+      await App.authService.signOut();
       App.currentUser = null;
       window.location.href = "index.html";
     });
   }
 
   if (updateStatusBtn && statusSelect) {
-    updateStatusBtn.addEventListener("click", () => {
+    updateStatusBtn.addEventListener("click", async () => {
       const newStatus = statusSelect.value;
 
-      const updatedPlan = App.travelPlanManager.updatePlanStatus(
+      const updatedPlan = await App.travelPlanManager.updatePlanStatus(
         activeTravelPlanId,
         newStatus
       );
@@ -105,12 +104,11 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   if (deletePlanBtn) {
-    deletePlanBtn.addEventListener("click", () => {
+    deletePlanBtn.addEventListener("click", async () => {
       const confirmed = confirm("Delete this travel plan?");
       if (!confirmed) return;
 
-      App.travelPlanManager.deletePlan(activeTravelPlanId);
-      localStorage.removeItem("activeTravelPlanId");
+      await App.travelPlanManager.deletePlan(activeTravelPlanId);
 
       alert("Travel plan deleted.");
       window.location.href = "search.html";

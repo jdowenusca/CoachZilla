@@ -1,9 +1,11 @@
 export default class User {
-  constructor(userID, username, password, role = "user") {
+  constructor(userID, username, password, role = "user", firstName = "", lastName = "") {
     this.userID = userID;
     this.username = username;
     this.password = password;
     this.role = role;
+    this.firstName = firstName;
+    this.lastName = lastName;
   }
 
   setUserID(userID) {
@@ -36,6 +38,22 @@ export default class User {
 
   getRole() {
     return this.role;
+  }
+
+  setFirstName(firstName) {
+    this.firstName = firstName;
+  }
+
+  getFirstName() {
+    return this.firstName;
+  }
+
+  setLastName(lastName) {
+    this.lastName = lastName;
+  }
+
+  getLastName() {
+    return this.lastName;
   }
 
   displayInfo() {
