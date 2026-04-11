@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoachZilla - Admin Dashboard</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="admin-page-wrapper">
+    <header class="admin-header">
+      <h1 class="logo-text">CoachZilla</h1>
+    </header>
+
+    <main class="admin-layout">
+      <section class="admin-top-actions">
+        <button id="goEditBtn" type="button">Edit Database</button>
+        <button id="goSearchBtn" type="button">Search Routes</button>
+        <button id="goAboutBtn" type="button">About</button>
+        <button id="logoutBtn" type="button">Logout</button>
+      </section>
+
+      <section id="adminWelcome"></section>
+
+      <section>
+        <h2>System Summary</h2>
+        <div id="summaryCards" class="admin-summary-grid"></div>
+      </section>
+
+      <section class="admin-data-grid">
+        <div>
+          <h2>Recent Users</h2>
+          <div id="recentUsersList"></div>
+        </div>
+
+        <div>
+          <h2>Recent Buses</h2>
+          <div id="recentBusesList"></div>
+        </div>
+
+        <div>
+          <h2>Recent Stations</h2>
+          <div id="recentStationsList"></div>
+        </div>
+
+        <div>
+          <h2>Recent Travel Plans</h2>
+          <div id="recentPlansList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="../js/pages/adminPage.js"></script>
+</body>
+</html>
