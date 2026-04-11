@@ -1,0 +1,29 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "README*.md",
+      "package*.json"
+    ],
+    "headers": [
+      {
+        "source": "**/*.js",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/javascript"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "!/**/*.{js,css,png,gif,jpg,jpeg,svg,ico,woff,woff2,json}",
+        "destination": "/html/index.html"
+      }
+    ]
+  }
+}
