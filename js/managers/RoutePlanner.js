@@ -1,11 +1,4 @@
-// ===============================================
-// ROUTEPLANNER OWNERSHIP NOTES
-// JUDAH: Overall route planning logic, including 
-// leg creation, refuel station selection, and 
-// time estimation.
-// TALON: Distance, heading, time calculations
-// (map accuracy + real-world scaling)
-// ===============================================
+// js/managers/RoutePlanner.js
 
 import Route from "../models/Route.js";
 import Leg from "../models/Leg.js";
@@ -27,20 +20,11 @@ export default class RoutePlanner {
 
         return [latitude, longitude];
     }
+
     // ============================================
-    // TALON TODO:
-    // Current distance calculation uses simple
-    // Cartesian math on lat/long values.
-    //
-    // Replace this with a geographic calculation 
-    // (e.g., Haversine formula or map-based routing 
-    // distance via Leaflet/API, whichever works best 
-    // or smthn else idc lol).
-    //
-    // This affects:
-    // - route accuracy
-    // - refuel logic correctness
-    // - time estimation
+    // FALLBACK: Haversine Formula (Miles)
+    // Used for quick pathfinding and as a failsafe
+    // if the real-world routing API is offline.
     // ============================================
     calculateDistance(coord1, coord2) {
         if (!coord1 || !coord2) return 0;
@@ -48,58 +32,112 @@ export default class RoutePlanner {
         const [lat1, lon1] = coord1;
         const [lat2, lon2] = coord2;
 
-        const dx = lat2 - lat1;
-        const dy = lon2 - lon1;
+        const R = 3958.8; // Earth radius in miles
 
-        return Math.sqrt(dx * dx + dy * dy);
+        const dLat = (lat2 - lat1) * (Math.PI / 180);
+        const dLon = (lon2 - lon1) * (Math.PI / 180);
+
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * (Math.PI / 180)) *
+            Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c; 
     }
+
     // ============================================
-    // TALON TODO:
-    // Heading calculation is currently basic
-    // angle math. May need adjustment if we move
-    // to real map-based routing or curved paths.
+    // REAL-WORLD ROUTING API (OSRM) w/ BULLETPROOF FALLBACK
     // ============================================
+    async getRealRoadData(coord1, coord2) {
+        if (!coord1 || !coord2) return { distanceMiles: 0, timeHours: 0 };
+
+        const [lat1, lon1] = coord1;
+        const [lat2, lon2] = coord2;
+
+        const targetUrl = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+
+        try {
+            // 1. Force the fetch to timeout if it takes longer than 3 seconds
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000); 
+
+            const response = await fetch(proxyUrl, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            // 2. Only try to read the data if the server responded perfectly
+            if (response.ok) {
+                // 3. Make sure the proxy didn't send us an HTML error page
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    
+                    const data = await response.json();
+                    
+                    if (data.code === "Ok" && data.routes.length > 0) {
+                        const route = data.routes[0];
+                        return { 
+                            distanceMiles: route.distance * 0.000621371, 
+                            timeHours: route.duration / 3600 
+                        };
+                    }
+                }
+            }
+        } catch (error) {
+            // Silently catch the timeout or CORS error without crashing
+            console.warn("API overloaded or blocked. Using local city-traffic simulation.");
+        }
+
+        // ============================================
+        // FAILSAFE: Local Realistic Traffic Simulator
+        // If the API fails, we calculate the straight line,
+        // add a 25% "curved roads" penalty, and assume 15 MPH city traffic.
+        // ============================================
+        const straightLineMiles = this.calculateDistance(coord1, coord2);
+        const realisticDistance = straightLineMiles * 1.25; 
+        const realisticTime = realisticDistance / 15; // 15 MPH average bus speed
+        
+        return { distanceMiles: realisticDistance, timeHours: realisticTime };
+    }
+
     calculateHeading(coord1, coord2) {
         if (!coord1 || !coord2) return 0;
 
         const [lat1, lon1] = coord1;
         const [lat2, lon2] = coord2;
 
-        const angle = Math.atan2(lon2 - lon1, lat2 - lat1);
-        return (angle * 180) / Math.PI >= 0
-            ? (angle * 180) / Math.PI
-            : ((angle * 180) / Math.PI) + 360;
+        const dLat = lat2 - lat1;
+        const dLon = lon2 - lon1;
+
+        const magnitude = Math.sqrt(dLon * dLon + dLat * dLat);
+        if (magnitude === 0) return 0; 
+
+        const dotProduct = dLat;
+        const alphaRad = Math.acos(dotProduct / magnitude);
+        const alphaDeg = alphaRad * (180 / Math.PI);
+
+        if (dLon < 0) {
+            return 360 - alphaDeg;
+        }
+        return alphaDeg;
     }
-    // ============================================
-    // TALON TODO:
-    // Current time calculation is a simple 
-    // distance/speed formula.
-    //
-    // Once real distance is implemented, ensure:
-    // - units match (miles/km vs coordinate space)
-    // - speed aligns with real-world scale
-    // ============================================
+
     calculateTime(distance, speed) {
         const numericSpeed = Number(speed);
-
-        if (!numericSpeed || numericSpeed <= 0) {
-            return 0;
-        }
-
+        if (!numericSpeed || numericSpeed <= 0) return 0;
         return distance / numericSpeed;
     }
 
     calculateMaxRange(bus) {
         if (!bus) return 0;
 
-        const tankSize = Number(bus.fuelTankSize);
-        const burnRate = Number(bus.fuelBurnRate);
+        const tankSize = Number(bus.fuelTankSize);  
+        const mpg = Number(bus.fuelBurnRate);       
 
-        if (!tankSize || !burnRate || burnRate <= 0) {
-            return 0;
-        }
-
-        return tankSize / burnRate;
+        if (!tankSize || !mpg || mpg <= 0) return 0;
+        return tankSize * mpg; 
     }
 
     isRefuelStation(station) {
@@ -109,7 +147,6 @@ export default class RoutePlanner {
     isCompatibleRefuelStation(bus, station) {
         if (!bus || !station) return false;
         if (!this.isRefuelStation(station)) return false;
-
         return String(bus.fuelType).toLowerCase() === String(station.fuelType).toLowerCase();
     }
 
@@ -120,41 +157,31 @@ export default class RoutePlanner {
             this.isCompatibleRefuelStation(bus, station)
         );
 
-        if (compatibleRefuelStations.length === 0) {
-            return null;
-        }
+        if (compatibleRefuelStations.length === 0) return null;
 
         const startCoords = this.getCoordinates(startStation);
         const endCoords = this.getCoordinates(endStation);
         const maxRange = this.calculateMaxRange(bus);
 
-        if (!startCoords || !endCoords || maxRange <= 0) {
-            return null;
-        }
+        if (!startCoords || !endCoords || maxRange <= 0) return null;
 
         let bestCandidate = null;
         let bestScore = Infinity;
 
         compatibleRefuelStations.forEach((candidate) => {
-            if (
-                String(candidate.id) === String(startStation.id) ||
-                String(candidate.id) === String(endStation.id)
-            ) {
-                return;
-            }
+            if (String(candidate.id) === String(startStation.id) || String(candidate.id) === String(endStation.id)) return;
 
             const candidateCoords = this.getCoordinates(candidate);
             if (!candidateCoords) return;
 
+            // We use Haversine here for quick pathfinding checks to avoid spamming the API
             const distanceToCandidate = this.calculateDistance(startCoords, candidateCoords);
             const distanceCandidateToEnd = this.calculateDistance(candidateCoords, endCoords);
 
             const canReachCandidate = distanceToCandidate <= maxRange;
             const canReachEndAfterRefuel = distanceCandidateToEnd <= maxRange;
 
-            if (!canReachCandidate || !canReachEndAfterRefuel) {
-                return;
-            }
+            if (!canReachCandidate || !canReachEndAfterRefuel) return;
 
             const totalDetourScore = distanceToCandidate + distanceCandidateToEnd;
 
@@ -167,62 +194,51 @@ export default class RoutePlanner {
         return bestCandidate;
     }
 
-    createLeg(startStation, endStation, isRefuelStop = false) {
+    async createLeg(startStation, endStation, isRefuelStop = false) {
         const startCoords = this.getCoordinates(startStation);
         const endCoords = this.getCoordinates(endStation);
 
-        const distance = this.calculateDistance(startCoords, endCoords);
+        // Fetch real road distance AND time!
+        const { distanceMiles, timeHours } = await this.getRealRoadData(startCoords, endCoords);
         const heading = this.calculateHeading(startCoords, endCoords);
 
         return {
             leg: new Leg(
                 startStation,
                 endStation,
-                distance,
-                0,
+                distanceMiles,
+                timeHours, 
                 heading,
                 isRefuelStop
             ),
-            distance
+            distance: distanceMiles,
+            time: timeHours
         };
     }
 
     finalizeLegTime(leg, bus) {
         if (!leg || !bus) return leg;
-
-        leg.setTimeToDestination(
-            this.calculateTime(Number(leg.distance), Number(bus.cruiseSpeed))
-        );
-
+        
+        // If OSRM failed entirely, fallback to the bus cruise speed math
+        if (!leg.timeToDestination || leg.timeToDestination === 0) {
+             leg.setTimeToDestination(
+                this.calculateTime(Number(leg.distance), Number(bus.cruiseSpeed))
+            );
+        }
         return leg;
     }
 
-    buildRoute(bus, destinationIds = [], allStations = []) {
-        if (!bus) {
-            throw new Error("A bus is required to build a route.");
-        }
-
-        if (!Array.isArray(destinationIds) || destinationIds.length < 2) {
-            throw new Error("At least 2 destination stations are required.");
-        }
-
-        if (!Array.isArray(allStations) || allStations.length === 0) {
-            throw new Error("Station list is required to build a route.");
-        }
+    async buildRoute(bus, destinationIds = [], allStations = []) {
+        if (!bus) throw new Error("A bus is required to build a route.");
+        if (!Array.isArray(destinationIds) || destinationIds.length < 2) throw new Error("At least 2 destination stations are required.");
+        if (!Array.isArray(allStations) || allStations.length === 0) throw new Error("Station list is required to build a route.");
 
         const maxRange = this.calculateMaxRange(bus);
-
-        if (maxRange <= 0) {
-            throw new Error("Bus has invalid fuel tank size or fuel burn rate.");
-        }
+        if (maxRange <= 0) throw new Error("Bus has invalid fuel tank size or fuel burn rate.");
 
         const resolvedStops = destinationIds.map((stationId) => {
             const station = this.getStationById(stationId, allStations);
-
-            if (!station) {
-                throw new Error(`Station with ID ${stationId} was not found.`);
-            }
-
+            if (!station) throw new Error(`Station with ID ${stationId} was not found.`);
             return station;
         });
 
@@ -241,40 +257,32 @@ export default class RoutePlanner {
             const endCoords = this.getCoordinates(endStation);
 
             if (!startCoords || !endCoords) {
-                throw new Error(
-                    `Invalid coordinates for route leg: ${startStation?.name || "Unknown"} -> ${endStation?.name || "Unknown"}`
-                );
+                throw new Error("Invalid coordinates for route leg.");
             }
 
-            const directDistance = this.calculateDistance(startCoords, endCoords);
+            // Check the real road distance
+            const { distanceMiles } = await this.getRealRoadData(startCoords, endCoords);
 
-            if (directDistance <= maxRange) {
-                const { leg, distance } = this.createLeg(startStation, endStation, false);
+            if (distanceMiles <= maxRange) {
+                const { leg, distance, time } = await this.createLeg(startStation, endStation, false);
                 this.finalizeLegTime(leg, bus);
 
                 legs.push(leg);
                 totalDistance += distance;
-                totalTime += Number(leg.timeToDestination);
+                totalTime += Number(leg.timeToDestination); 
                 continue;
             }
 
-            const refuelStation = this.findBestRefuelStation(
-                startStation,
-                endStation,
-                bus,
-                allStations
-            );
+            const refuelStation = this.findBestRefuelStation(startStation, endStation, bus, allStations);
 
             if (!refuelStation) {
-                throw new Error(
-                    `No compatible refuel station can bridge ${startStation.name} to ${endStation.name} for bus fuel type ${bus.fuelType}.`
-                );
+                throw new Error(`No compatible refuel station can bridge ${startStation.name} to ${endStation.name}.`);
             }
 
-            const firstSegment = this.createLeg(startStation, refuelStation, true);
+            const firstSegment = await this.createLeg(startStation, refuelStation, true);
             this.finalizeLegTime(firstSegment.leg, bus);
 
-            const secondSegment = this.createLeg(refuelStation, endStation, false);
+            const secondSegment = await this.createLeg(refuelStation, endStation, false);
             this.finalizeLegTime(secondSegment.leg, bus);
 
             legs.push(firstSegment.leg, secondSegment.leg);
@@ -286,8 +294,8 @@ export default class RoutePlanner {
         }
 
         route.setLegs(legs);
-        route.setTotalDistance(Number(totalDistance.toFixed(4)));
-        route.setTotalTime(Number(totalTime.toFixed(4)));
+        route.setTotalDistance(Number(totalDistance.toFixed(2)));
+        route.setTotalTime(Number(totalTime.toFixed(2)));
         route.setRefuelStops(refuelStops);
 
         return route;

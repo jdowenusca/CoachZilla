@@ -229,7 +229,7 @@ Do not change everything at once.
 # Definition of "Done" for You
 Your route/planning task is complete when:
 - distance calculations reflect real-world geography
-- time calculations are consistent and accurate
+- time calculations are consistent and accurate (X:XX:XX)
 - refuel logic behaves correctly with new distances
 - routes render clearly on the map
 - start/stop/end are visually distinct

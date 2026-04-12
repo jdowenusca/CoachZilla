@@ -29,8 +29,10 @@ export default class TravelPlanManager {
         );
     }
 
-    async savePlan(plan) {
-        await this.firestoreService.saveDocument(this.storageKey, plan.travelPlanId, plan);
+async savePlan(plan) {
+        // Convert custom class to plain object to fix Firebase crash
+        const plainPlanObject = JSON.parse(JSON.stringify(plan));
+        await this.firestoreService.saveDocument(this.storageKey, plan.travelPlanId, plainPlanObject);
     }
 
     // --- CREATE ---
@@ -40,7 +42,8 @@ export default class TravelPlanManager {
             throw new Error("Invalid travel plan input");
         }
 
-        const route = this.routePlanner.buildRoute(bus, destinationIds, allStations);
+        // ADD 'await' HERE to wait for the OSRM road API to finish!
+        const route = await this.routePlanner.buildRoute(bus, destinationIds, allStations);
 
         const newPlan = new TravelPlan(
             null,
@@ -55,7 +58,6 @@ export default class TravelPlanManager {
 
         return newPlan;
     }
-
     // --- READ ---
 
     getAllPlans() {

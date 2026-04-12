@@ -24,6 +24,28 @@ export default class LeafletMapService {
     return this.map;
   }
 
+  // ============================================
+  // TALON - ADDED: Color-coded marker icons
+  // Uses Leaflet color marker images hosted on GitHub.
+  //
+  // Color guide:
+  //   green  = start station
+  //   red    = end station
+  //   blue   = middle stop (default unselected)
+  //   orange = refuel station
+  //   grey   = unselected / background station
+  // ============================================
+  _getMarkerIcon(color) {
+    return L.icon({
+      iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+      shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+  }
+
   clearMarkers() {
     this.markers.forEach((marker) => marker.remove());
     this.markers = [];
@@ -36,7 +58,19 @@ export default class LeafletMapService {
     }
   }
 
-  renderStations(stations = [], onSelect = null, selectedIds = []) {
+  // ============================================
+  // TALON - UPDATED: renderStations
+  // Now accepts an optional routeOrderIds array
+  // to determine marker color based on role:
+  //   - First selected  → green  (Start)
+  //   - Last selected   → red    (End)
+  //   - Middle selected → blue   (Stop)
+  //   - Not selected    → grey
+  //
+  // Also marks refuel stations with orange when
+  // a refuelStopIds array is provided.
+  // ============================================
+  renderStations(stations = [], onSelect = null, selectedIds = [], refuelStopIds = []) {
     if (!this.map) return;
 
     this.clearMarkers();
@@ -49,15 +83,42 @@ export default class LeafletMapService {
         return;
       }
 
-      const isSelected = selectedIds.includes(String(station.id));
+      const stationIdStr = String(station.id);
+      const selectedIndex = selectedIds.indexOf(stationIdStr);
+      const isSelected = selectedIndex !== -1;
+      const isRefuel = refuelStopIds.includes(stationIdStr);
 
-      const marker = L.marker([lat, lng]).addTo(this.map);
+      // Determine marker color
+      let markerColor = "grey";
+      let roleLabel = null;
+
+      if (isSelected) {
+        if (selectedIndex === 0) {
+          markerColor = "green";
+          roleLabel = "Start";
+        } else if (selectedIndex === selectedIds.length - 1) {
+          markerColor = "red";
+          roleLabel = "End";
+        } else {
+          markerColor = "blue";
+          roleLabel = `Stop ${selectedIndex}`;
+        }
+      }
+
+      if (isRefuel) {
+        markerColor = "orange";
+        roleLabel = "Refuel Stop";
+      }
+
+      const icon = this._getMarkerIcon(markerColor);
+      const marker = L.marker([lat, lng], { icon }).addTo(this.map);
 
       const typeLabel = station.stationType || station.fuelType || "Station";
 
       marker.bindPopup(`
         <div>
           <strong>${station.name}</strong><br>
+          ${roleLabel ? `<em>${roleLabel}</em><br>` : ""}
           Type: ${typeLabel}<br>
           Lat: ${lat}<br>
           Lng: ${lng}<br>
@@ -67,16 +128,17 @@ export default class LeafletMapService {
         </div>
       `);
 
-      if (isSelected) {
-        marker.bindTooltip("Selected", {
-          permanent: false,
-          direction: "top"
+      if (roleLabel) {
+        marker.bindTooltip(roleLabel, {
+          permanent: true,
+          direction: "top",
+          offset: [0, -38]
         });
       }
 
       marker.on("click", () => {
         if (typeof onSelect === "function") {
-          onSelect(String(station.id));
+          onSelect(stationIdStr);
         }
       });
 
@@ -88,7 +150,7 @@ export default class LeafletMapService {
         if (button) {
           button.addEventListener("click", () => {
             if (typeof onSelect === "function") {
-              onSelect(String(station.id));
+              onSelect(stationIdStr);
             }
           });
         }
@@ -100,7 +162,11 @@ export default class LeafletMapService {
     if (stations.length > 0) {
       const bounds = L.latLngBounds(
         stations
-          .filter((station) => !Number.isNaN(Number(station.latitude)) && !Number.isNaN(Number(station.longitude)))
+          .filter(
+            (station) =>
+              !Number.isNaN(Number(station.latitude)) &&
+              !Number.isNaN(Number(station.longitude))
+          )
           .map((station) => [Number(station.latitude), Number(station.longitude)])
       );
 
@@ -110,6 +176,14 @@ export default class LeafletMapService {
     }
   }
 
+  // ============================================
+  // TALON - UPDATED: drawPreviewRoute
+  // Now renders a styled blue polyline with
+  // visible weight and opacity.
+  //
+  // Pass the ordered array of selected stations
+  // (not all stations) to draw only the route path.
+  // ============================================
   drawPreviewRoute(stations = []) {
     if (!this.map) return;
 
@@ -121,7 +195,15 @@ export default class LeafletMapService {
 
     if (points.length < 2) return;
 
-    this.routeLine = L.polyline(points).addTo(this.map);
+    this.routeLine = L.polyline(points, {
+      color: "#3b82f6",   // blue route line
+      weight: 4,
+      opacity: 0.85,
+      lineJoin: "round"
+    }).addTo(this.map);
+
+    // Fit map to show full route
+    this.map.fitBounds(this.routeLine.getBounds(), { padding: [40, 40] });
   }
 
   focusStation(station) {
