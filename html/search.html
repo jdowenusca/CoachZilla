@@ -1,5 +1,9 @@
+<!-- Author: Talon Brady -->
+<!-- Edited by: Judah Owen -->
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,18 +11,15 @@
 
     <link rel="stylesheet" href="../css/style.css">
     <!-- Leaflet CSS -->
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin=""
-    >
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 
 <body>
     <div class="search-page-wrapper">
         <header class="search-header">
-            <h1 class="logo-text">CoachZilla</h1>
+            <!-- Logo -->
+            <img src="../assets/images/logo.png" alt="CoachZilla Logo" class="logo">
         </header>
 
         <main class="search-layout search-layout-map">
@@ -41,11 +42,7 @@
 
                 <div class="search-form-block">
                     <label for="stationSearchInput"><strong>Filter Stations</strong></label>
-                    <input
-                        type="text"
-                        id="stationSearchInput"
-                        placeholder="Search stations by name or type"
-                    >
+                    <input type="text" id="stationSearchInput" placeholder="Search stations by name or type">
                 </div>
 
                 <div class="selected-route-panel">
@@ -74,11 +71,9 @@
         </main>
     </div>
 
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""
-    ></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script type="module" src="../js/pages/searchPage.js"></script>
 </body>
+
 </html>
