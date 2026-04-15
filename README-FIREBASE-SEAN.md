@@ -339,3 +339,7 @@ Do not rebuild the app structure unless it cannot be avoided. The structure is a
 The main goal is to replace prototype persistence/auth layers with Firebase while preserving the manager-based architecture.
 
 # Good luck mate. o7
+
+# New tasks (4/15/26)
+Update the pages with necessary fixes and logic (you're mostly done just make sure it all flows well) and finish the artwork for
+the logo.

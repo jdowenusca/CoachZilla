@@ -259,3 +259,6 @@ Responsible for:
 Focus on improving accuracy without disrupting the existing system flow. The RoutePlanner and map features are already functional, so your goal is to enhance realism (distance, time, and visualization) while keeping all outputs compatible with the current managers and pages. Work incrementally—validate each change (especially distance and refuel logic) before moving on. Prioritize clean, modular updates so future improvements can build on your work without requiring major rewrites.
 
 # Good luck buddy. o7
+
+# New Tasks (4/15/26)
+Add parameters/limiters to the "Add Buses" and "Add Stations" forms so that the calculations remain realistic.
