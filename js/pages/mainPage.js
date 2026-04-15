@@ -37,7 +37,15 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   if (goTravelBtn) {
     goTravelBtn.addEventListener("click", () => {
-      window.location.href = "search.html";
+      const userPlans = App.travelPlanManager.getPlansByUser(App.currentUser.userID);
+
+      if (userPlans.length === 0) {
+        window.location.href = "search.html";
+        return;
+      }
+
+      const activePlan = userPlans[0];
+      window.location.href = `travel.html?planId=${encodeURIComponent(activePlan.travelPlanId)}`;
     });
   }
 

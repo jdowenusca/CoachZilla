@@ -31,6 +31,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   const recentBusesList = document.getElementById("recentBusesList");
   const recentStationsList = document.getElementById("recentStationsList");
   const recentPlansList = document.getElementById("recentPlansList");
+  const newUsernameInput = document.getElementById("newUsername");
+  const newPasswordInput = document.getElementById("newPassword");
+  const newFirstNameInput = document.getElementById("newFirstName");
+  const newLastNameInput = document.getElementById("newLastName");
+  const newRoleSelect = document.getElementById("newRole");
+  const createUserBtn = document.getElementById("createUserBtn");
 
   setupNavigation();
   renderWelcome();
@@ -39,6 +45,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   renderBuses();
   renderStations();
   renderTravelPlans();
+  setupCreateUser();
 
   function setupNavigation() {
     if (goEditBtn) {
@@ -66,6 +73,68 @@ window.addEventListener("DOMContentLoaded", async () => {
         window.location.href = "index.html";
       });
     }
+  }
+
+  function setupCreateUser() {
+    if (!createUserBtn) return;
+
+    createUserBtn.addEventListener("click", async () => {
+      const username = newUsernameInput?.value.trim();
+      const password = newPasswordInput?.value;
+      const firstName = newFirstNameInput?.value.trim();
+      const lastName = newLastNameInput?.value.trim();
+      const role = newRoleSelect?.value || "user";
+
+      // Validate fields
+      const nameRegex = /^[a-zA-Z\s\-']+$/;
+      const maxLength = 15;
+
+      if (!username || !password || !firstName || !lastName) {
+        alert("Please enter both username and password.");
+        return;
+      }
+
+      if (username.length > maxLength || firstName.length > maxLength || lastName.length > maxLength) {
+        alert(`Username, first name, and last name must be ${maxLength} characters or less.`);
+        return;
+      }
+
+      if (!nameRegex.test(firstName) || !nameRegex.test(lastName)) {
+        alert("Names can only contain letters, spaces, hyphens, and apostrophes.");
+        return;
+      }
+
+      createUserBtn.disabled = true;
+      createUserBtn.textContent = "Creating user...";
+
+      try {
+        const newUserProfile = await App.authService.signUp(
+          username,
+          password,
+          role,
+          firstName,
+          lastName
+        );
+
+        await App.accountManager.addUserProfile(newUserProfile);
+        renderUsers();
+        renderSummary();
+
+        newUsernameInput.value = "";
+        newPasswordInput.value = "";
+        newFirstNameInput.value = "";
+        newLastNameInput.value = "";
+        newRoleSelect.value = "user";
+
+        alert(`Created user ${username} successfully.`);
+      } catch (error) {
+        console.error("Failed to create user:", error);
+        alert("Could not create user. Please check the username and try again.");
+      } finally {
+        createUserBtn.disabled = false;
+        createUserBtn.textContent = "Create User";
+      }
+    });
   }
 
   function renderWelcome() {
@@ -131,15 +200,52 @@ window.addEventListener("DOMContentLoaded", async () => {
     recentUsersList.innerHTML = users
       .slice(-5)
       .reverse()
-      .map((user) => `
-        <div class="admin-card">
-          <p><strong>User ID:</strong> ${user.userID ?? "N/A"}</p>
-          <p><strong>Name:</strong> ${user.firstName || ""} ${user.lastName || ""}</p>
-          <p><strong>Username:</strong> ${user.username || "N/A"}</p>
-          <p><strong>Role:</strong> ${user.role || "user"}</p>
-        </div>
-      `)
+      .map((user) => {
+        const isCurrentAdmin = String(user.userID) === String(storedUser.userID);
+
+        return `
+          <div class="admin-card">
+            <p><strong>User ID:</strong> ${user.userID ?? "N/A"}</p>
+            <p><strong>Name:</strong> ${user.firstName || ""} ${user.lastName || ""}</p>
+            <p><strong>Username:</strong> ${user.username || "N/A"}</p>
+            <p><strong>Role:</strong> ${user.role || "user"}</p>
+            <button class="delete-user-btn" data-user-id="${user.userID || ""}" ${isCurrentAdmin ? "disabled" : ""}>
+              ${isCurrentAdmin ? "Current Admin" : "Delete User"}
+            </button>
+          </div>
+        `;
+      })
       .join("");
+
+    const deleteUserButtons = document.querySelectorAll(".delete-user-btn");
+    deleteUserButtons.forEach((button) => {
+      if (button.disabled) return;
+      button.addEventListener("click", async () => {
+        const userId = button.dataset.userId;
+        if (!userId) return;
+
+        const confirmed = confirm("Delete this user and remove their Firestore profile?");
+        if (!confirmed) return;
+
+        await deleteUser(userId);
+      });
+    });
+  }
+
+  async function deleteUser(userId) {
+    try {
+      const success = await App.accountManager.removeUser(userId);
+      if (!success) {
+        alert("Could not delete user. The user may not exist.");
+        return;
+      }
+      renderUsers();
+      renderSummary();
+      alert("User deleted successfully.");
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+      alert("Failed to delete user.");
+    }
   }
 
   function renderBuses() {
