@@ -26,7 +26,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   const busFormTitle = document.getElementById("busFormTitle");
   const editingBusId = document.getElementById("editingBusId");
   const busMake = document.getElementById("busMake");
-  const busModel = document.getElementById("busModel");
+  const busModelText = document.getElementById("busModelText");
+  const busModelSelect = document.getElementById("busModelSelect");
   const busType = document.getElementById("busType");
   const busFuelType = document.getElementById("busFuelType");
   const busFuelTankSize = document.getElementById("busFuelTankSize");
@@ -82,6 +83,10 @@ window.addEventListener("DOMContentLoaded", async () => {
       stationMode.addEventListener("change", updateStationExtraFieldLabel);
     }
 
+    if (busMake) {
+      busMake.addEventListener("change", updateBusModelField);
+    }
+
     if (saveBusBtn) {
       saveBusBtn.addEventListener("click", handleSaveBus);
     }
@@ -99,11 +104,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
 
     updateStationExtraFieldLabel();
+    updateBusModelField();
   }
 
   async function handleSaveBus() {
     const make = busMake.value.trim();
-    const model = busModel.value.trim();
+    const model = make === "Ford" || make === "Prevost"
+      ? busModelSelect.value.trim()
+      : busModelText.value.trim();
     const type = busType.value.trim();
     const fuelType = busFuelType.value.trim();
     const fuelTankSize = Number(busFuelTankSize.value);
@@ -330,9 +338,22 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     editingBusId.value = bus.id;
     busMake.value = bus.make || "";
-    busModel.value = bus.model || "";
+    if (bus.make === "Ford" || bus.make === "Prevost") {
+      busModelSelect.hidden = false;
+      busModelSelect.disabled = false;
+      busModelText.hidden = true;
+      busModelText.disabled = true;
+      updateBusModelOptions();
+      busModelSelect.value = bus.model || "";
+    } else {
+      busModelSelect.hidden = true;
+      busModelSelect.disabled = true;
+      busModelText.hidden = false;
+      busModelText.disabled = false;
+      busModelText.value = bus.model || "";
+    }
     busType.value = bus.type || "";
-    busFuelType.value = bus.fuelType || "";
+    busFuelType.value = bus.make === "Prevost" ? "Diesel" : (bus.fuelType || "");
     busFuelTankSize.value = bus.fuelTankSize ?? "";
     busFuelBurnRate.value = bus.fuelBurnRate ?? "";
     busCruiseSpeed.value = bus.cruiseSpeed ?? "";
@@ -407,7 +428,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   function resetBusForm() {
     editingBusId.value = "";
     busMake.value = "";
-    busModel.value = "";
+    busModelText.value = "";
+    busModelSelect.value = "";
+    busModelSelect.hidden = true;
+    busModelSelect.disabled = true;
+    busModelText.hidden = false;
+    busModelText.disabled = false;
     busType.value = "";
     busFuelType.value = "";
     busFuelTankSize.value = "";
@@ -430,6 +456,43 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     stationFormTitle.textContent = "Add Station";
     saveStationBtn.textContent = "Save Station";
+  }
+
+  function updateBusModelField() {
+    if (busMake.value === "Ford" || busMake.value === "Prevost") {
+      busModelSelect.hidden = false;
+      busModelSelect.disabled = false;
+      busModelText.hidden = true;
+      busModelText.disabled = true;
+      updateBusModelOptions();
+      busModelSelect.value = "";
+      if (busMake.value === "Prevost") {
+        busFuelType.value = "Diesel";
+      } else if (busMake.value === "Ford") {
+        busFuelType.value = "Gasoline";
+      }
+    } else {
+      busModelSelect.hidden = true;
+      busModelSelect.disabled = true;
+      busModelText.hidden = false;
+      busModelText.disabled = false;
+      busModelSelect.value = "";
+    }
+  }
+
+  function updateBusModelOptions() {
+    const optionsByMake = {
+      Ford: ["Econoline E-450", "Econoline E-350", "Transit E-350"],
+      Prevost: ["H3-45", "X3-45"]
+    };
+    const make = busMake.value;
+    const models = optionsByMake[make] || [];
+    const placeholder = make === "Prevost"
+      ? "Select Prevost Model"
+      : "Select Model";
+
+    busModelSelect.innerHTML = `<option value="" disabled selected>${placeholder}</option>` +
+      models.map((model) => `<option value="${model}">${model}</option>`).join("");
   }
 
   function updateStationExtraFieldLabel() {

@@ -35,8 +35,18 @@
                     <div class="form-section">
                         <input type="hidden" id="editingBusId">
 
-                        <input type="text" id="busMake" placeholder="Make">
-                        <input type="text" id="busModel" placeholder="Model">
+                        <select id="busMake">
+                            <option value="" disabled selected>Select Make</option>
+                            <option value="Ford">Ford</option>
+                            <option value="Prevost">Prevost</option>
+                        </select>
+                        <input type="text" id="busModelText" placeholder="Model">
+                        <select id="busModelSelect" hidden disabled>
+                            <option value="" disabled selected>Select Ford Model</option>
+                            <option value="Econoline E-450">Econoline E-450</option>
+                            <option value="Econoline E-350">Econoline E-350</option>
+                            <option value="Transit E-350">Transit E-350</option>
+                        </select>
                         <input type="text" id="busType" placeholder="Type">
                         <input type="text" id="busFuelType" placeholder="Fuel Type">
                         <input type="number" id="busFuelTankSize" placeholder="Fuel Tank Size">
