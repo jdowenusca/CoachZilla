@@ -1,3 +1,6 @@
+<!-- Author: Sean Soda -->
+<!-- Edited by: Judah Owen -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +12,8 @@
 <body>
   <div class="admin-page-wrapper">
     <header class="admin-header">
-      <h1 class="logo-text">CoachZilla</h1>
+      <!-- Logo -->
+        <img src="../assets/images/logo.png" alt="CoachZilla Logo" class="logo">
     </header>
 
     <main class="admin-layout">
@@ -25,6 +29,34 @@
       <section>
         <h2>System Summary</h2>
         <div id="summaryCards" class="admin-summary-grid"></div>
+      </section>
+
+      <section class="admin-card form-section">
+        <h2>Create New User</h2>
+        <div class="form-group">
+          <label for="newUsername">Username</label>
+          <input id="newUsername" type="text" placeholder="Username" maxlength="15" />
+        </div>
+        <div class="form-group">
+          <label for="newPassword">Password</label>
+          <input id="newPassword" type="password" placeholder="Password" />
+        </div>
+        <div class="form-group">
+          <label for="newFirstName">First Name</label>
+          <input id="newFirstName" type="text" placeholder="First name" maxlength="15" />
+        </div>
+        <div class="form-group">
+          <label for="newLastName">Last Name</label>
+          <input id="newLastName" type="text" placeholder="Last name" maxlength="15" />
+        </div>
+        <div class="form-group">
+          <label for="newRole">Role</label>
+          <select id="newRole">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <button id="createUserBtn" type="button">Create User</button>
       </section>
 
       <section class="admin-data-grid">

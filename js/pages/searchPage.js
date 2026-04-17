@@ -35,6 +35,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   let filteredStations = [...allStations];
   let selectedDestinationIds = [];
   let activeTravelPlanId = null;
+  let isCreatingPlan = false;
 
   try {
     mapService.initializeMap("stationMap");
@@ -49,6 +50,11 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   if (buildBtn) {
     buildBtn.addEventListener("click", async () => {
+      // Prevent duplicate submissions
+      if (isCreatingPlan) {
+        return;
+      }
+
       try {
         const busId = busSelect.value;
         const selectedBus = buses.find((b) => String(b.id) === String(busId));
@@ -63,6 +69,12 @@ window.addEventListener("DOMContentLoaded", async () => {
           return;
         }
 
+        // Set flag and disable button
+        isCreatingPlan = true;
+        buildBtn.disabled = true;
+        const originalText = buildBtn.textContent;
+        buildBtn.textContent = "Building Route...";
+
         const newPlan = await App.travelPlanManager.createTravelPlan(
           currentUser.userID,
           selectedBus,
@@ -75,6 +87,10 @@ window.addEventListener("DOMContentLoaded", async () => {
       } catch (err) {
         console.error(err);
         alert("Failed to create route.");
+        // Re-enable button on error
+        isCreatingPlan = false;
+        buildBtn.disabled = false;
+        buildBtn.textContent = "Build Route";
       }
     });
   }
