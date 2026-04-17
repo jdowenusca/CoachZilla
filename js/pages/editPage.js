@@ -131,8 +131,18 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    if (fuelTankSize <= 0 || fuelBurnRate <= 0 || cruiseSpeed <= 0) {
-      alert("Fuel tank size, fuel burn rate, and cruise speed must be greater than 0.");
+    if (fuelTankSize < 10 || fuelTankSize > 300) {
+      alert("enter a fuel size (10 - 300 gallons)");
+      return;
+    }
+    
+    if (fuelBurnRate < 1 || fuelBurnRate > 50) {
+      alert("enter burn rate (1 - 50 MPG)");
+      return;
+    }
+    
+    if (cruiseSpeed < 5 || cruiseSpeed > 85) {
+      alert("enter cruise speed (5 - 85 MPH)");
       return;
     }
 
