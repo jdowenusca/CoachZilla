@@ -17,16 +17,16 @@
             <!-- Logo -->
             <img src="../assets/images/logo.png" alt="CoachZilla Logo" class="logo">
             <h1>CoachZilla</h1>
-        </header>
-
-        <main class="travel-layout">
-            <section class="travel-page-actions">
+            <!-- Action buttons below logo -->
+            <div class="travel-actions-container">
                 <button id="backHomeBtn" type="button">Home</button>
                 <button id="goSearchBtn" type="button">Search</button>
                 <button id="goAboutBtn" type="button">About</button>
                 <button id="logoutBtn" type="button">Logout</button>
-            </section>
+            </div>
+        </header>
 
+        <main class="travel-layout">
             <section class="travel-main-grid">
                 <div class="travel-column">
                     <h1>Travel Plan</h1>
@@ -51,7 +51,7 @@
 
                 <div class="travel-column">
                     <h2>Route Legs</h2>
-                    <div id="routeLegsContainer"></div>
+                    <div id="routeLegsContainer" class="scrollable-route-legs"></div>
                 </div>
             </section>
         </main>

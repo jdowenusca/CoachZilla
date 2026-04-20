@@ -85,34 +85,60 @@ export const App = {
       );
     }
 
-    if ((await this.stationManager.getAllStations()).length === 0) {
-      await this.stationManager.addBusStation(
-        "Campus Main Stop",
-        33.5018,
-        -81.9696,
-        "Bus Station"
-      );
+    const existingStations = this.stationManager.getAllStations();
 
-      await this.stationManager.addBusStation(
-        "Downtown Transit Center",
-        33.4735,
-        -81.9748,
-        "Bus Station"
-      );
+    const plannedStations = [
+      {
+        name: "Campus North Stop",
+        latitude: 33.59342,
+        longitude: -81.766009,
+        type: "Bus Station"
+      },
+      {
+        name: "Campus South Stop",
+        latitude: 33.55342,
+        longitude: -81.766009,
+        type: "Bus Station"
+      },
+      {
+        name: "Campus East Refuel",
+        latitude: 33.57342,
+        longitude: -81.746009,
+        fuelType: "Diesel"
+      },
+      {
+        name: "Campus West Refuel",
+        latitude: 33.57342,
+        longitude: -81.786009,
+        fuelType: "Gasoline"
+      }
+    ];
 
-      await this.stationManager.addRefuelStation(
-        "Diesel Refuel Hub",
-        33.485,
-        -81.965,
-        "Diesel"
-      );
+    const plannedNames = plannedStations.map((station) => station.name);
 
-      await this.stationManager.addRefuelStation(
-        "Gas Refuel Depot",
-        33.49,
-        -81.98,
-        "Gasoline"
-      );
+    // Remove any existing stations that use the planned names so we only keep the current set.
+    for (const station of [...existingStations]) {
+      if (plannedNames.includes(station.name)) {
+        await this.stationManager.removeStation(station.getID());
+      }
+    }
+
+    for (const station of plannedStations) {
+      if (station.fuelType) {
+        await this.stationManager.addRefuelStation(
+          station.name,
+          station.latitude,
+          station.longitude,
+          station.fuelType
+        );
+      } else {
+        await this.stationManager.addBusStation(
+          station.name,
+          station.latitude,
+          station.longitude,
+          station.type
+        );
+      }
     }
   }
 };

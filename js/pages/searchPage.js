@@ -19,9 +19,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   const goAboutBtn = document.getElementById("goAboutBtn");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  const stationSearchInput = document.getElementById("stationSearchInput");
-  const stationsSearchList = document.getElementById("stationsSearchList");
-  const selectedRouteList = document.getElementById("selectedRouteList");
+  const stationSearchInput = document.getElementById("stationFilter");
+  const stationsSearchList = document.getElementById("stationList");
+  const selectedRouteList = document.getElementById("selectedStops");
   const busSelect = document.getElementById("busSelect");
   const buildBtn = document.getElementById("buildRouteBtn");
   const clearRouteBtn = document.getElementById("clearRouteBtn");
@@ -38,7 +38,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   let isCreatingPlan = false;
 
   try {
-    mapService.initializeMap("stationMap");
+    mapService.initializeMap("map");
   } catch (error) {
     console.error("Leaflet map failed to initialize:", error);
   }
@@ -47,62 +47,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   renderStations(filteredStations);
   renderSelectedRoute();
   refreshMap();
-
-  if (buildBtn) {
-    buildBtn.addEventListener("click", async () => {
-      // Prevent duplicate submissions
-      if (isCreatingPlan) {
-        return;
-      }
-
-      try {
-        const busId = busSelect.value;
-        const selectedBus = buses.find((b) => String(b.id) === String(busId));
-
-        if (!selectedBus) {
-          alert("Select a bus first.");
-          return;
-        }
-
-        if (selectedDestinationIds.length < 2) {
-          alert("Select at least 2 stations for the route.");
-          return;
-        }
-
-        // Set flag and disable button
-        isCreatingPlan = true;
-        buildBtn.disabled = true;
-        const originalText = buildBtn.textContent;
-        buildBtn.textContent = "Building Route...";
-
-        const newPlan = await App.travelPlanManager.createTravelPlan(
-          currentUser.userID,
-          selectedBus,
-          selectedDestinationIds,
-          allStations
-        );
-
-        activeTravelPlanId = newPlan.travelPlanId;
-        window.location.href = `travel.html?planId=${encodeURIComponent(activeTravelPlanId)}`;
-      } catch (err) {
-        console.error(err);
-        alert("Failed to create route.");
-        // Re-enable button on error
-        isCreatingPlan = false;
-        buildBtn.disabled = false;
-        buildBtn.textContent = "Build Route";
-      }
-    });
-  }
-
-  if (clearRouteBtn) {
-    clearRouteBtn.addEventListener("click", () => {
-      selectedDestinationIds = [];
-      renderSelectedRoute();
-      renderStations(filteredStations);
-      refreshMap();
-    });
-  }
 
   if (backHomeBtn) {
     backHomeBtn.addEventListener("click", () => {
@@ -136,6 +80,59 @@ window.addEventListener("DOMContentLoaded", async () => {
       await App.authService.signOut();
       App.currentUser = null;
       window.location.href = "index.html";
+    });
+  }
+
+  if (buildBtn) {
+    buildBtn.addEventListener("click", async () => {
+      if (isCreatingPlan) {
+        return;
+      }
+
+      const busId = busSelect.value;
+      const selectedBus = buses.find((b) => String(b.id) === String(busId));
+
+      if (!selectedBus) {
+        alert("Select a bus first.");
+        return;
+      }
+
+      if (selectedDestinationIds.length < 2) {
+        alert("Select at least 2 stations for the route.");
+        return;
+      }
+
+      isCreatingPlan = true;
+      buildBtn.disabled = true;
+      const originalText = buildBtn.textContent;
+      buildBtn.textContent = "Building Route...";
+
+      try {
+        const newPlan = await App.travelPlanManager.createTravelPlan(
+          currentUser.userID,
+          selectedBus,
+          selectedDestinationIds,
+          allStations
+        );
+
+        activeTravelPlanId = newPlan.travelPlanId;
+        window.location.href = `travel.html?planId=${encodeURIComponent(activeTravelPlanId)}`;
+      } catch (err) {
+        console.error(err);
+        alert("Failed to create route.");
+        isCreatingPlan = false;
+        buildBtn.disabled = false;
+        buildBtn.textContent = originalText;
+      }
+    });
+  }
+
+  if (clearRouteBtn) {
+    clearRouteBtn.addEventListener("click", () => {
+      selectedDestinationIds = [];
+      renderSelectedRoute();
+      renderStations(filteredStations);
+      refreshMap();
     });
   }
 

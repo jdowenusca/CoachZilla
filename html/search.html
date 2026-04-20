@@ -23,52 +23,46 @@
             <h1>CoachZilla</h1>
         </header>
 
+        <div class="search-header-actions">
+            <div class="button-group">
+                <button id="goTravelBtn" type="button">Travel Plan</button>
+                <button id="goAboutBtn" type="button">About</button>
+                <button id="logoutBtn" type="button">Logout</button>
+            </div>
+        </div>
+
         <main class="search-layout search-layout-map">
-            <section class="search-panel">
-                <h1>Search Routes</h1>
+            <div class="search-container">
 
-                <div class="search-actions">
-                    <button id="backHomeBtn">Home</button>
-                    <button id="goTravelBtn">Travel Plan</button>
-                    <button id="goAboutBtn">About</button>
-                    <button id="logoutBtn">Logout</button>
+                <!-- LEFT PANEL -->
+                <div class="left-panel">
+                    <h3>Select Bus:</h3>
+                    <select id="busSelect"></select>
+
+                    <h3>Filter Stations:</h3>
+                    <input type="text" id="stationFilter" placeholder="Search stations...">
+
+                    <h3>Available Stations</h3>
+                    <div id="stationList" class="scroll-box"></div>
                 </div>
 
-                <div class="search-form-block">
-                    <label for="busSelect"><strong>Select Bus</strong></label>
-                    <select id="busSelect">
-                        <option value="">-- Select a Bus --</option>
-                    </select>
+                <!-- CENTER MAP -->
+                <div class="map-panel">
+                    <div id="map"></div>
                 </div>
 
-                <div class="search-form-block">
-                    <label for="stationSearchInput"><strong>Filter Stations</strong></label>
-                    <input type="text" id="stationSearchInput" placeholder="Search stations by name or type">
-                </div>
+                <!-- RIGHT PANEL -->
+                <div class="right-panel">
+                    <h3>Selected Route Stops</h3>
+                    <div id="selectedStops" class="scroll-box"></div>
 
-                <div class="selected-route-panel">
-                    <h2>Selected Route Stops</h2>
-                    <p class="route-help-text">
-                        Click stations from the list or the map to add them in order.
-                        The first stop is your start, the last stop is your end.
-                    </p>
-                    <div id="selectedRouteList"></div>
-                    <div class="selected-route-actions">
+                    <div class="route-buttons">
+                        <button id="buildRouteBtn" type="button">Build Route</button>
                         <button id="clearRouteBtn" type="button">Clear Route</button>
                     </div>
                 </div>
 
-                <div class="search-form-block">
-                    <button id="buildRouteBtn" type="button">Build Route</button>
-                </div>
-
-                <h2>Available Stations</h2>
-                <div id="stationsSearchList"></div>
-            </section>
-
-            <section class="map-panel">
-                <div id="stationMap"></div>
-            </section>
+            </div>
         </main>
     </div>
 
