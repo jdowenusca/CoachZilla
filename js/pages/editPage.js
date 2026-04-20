@@ -45,6 +45,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   const stationExtraField = document.getElementById("stationExtraField");
   const saveStationBtn = document.getElementById("saveStationBtn");
   const cancelStationEditBtn = document.getElementById("cancelStationEditBtn");
+  const newUsernameInput = document.getElementById("newUsername");
+  const newPasswordInput = document.getElementById("newPassword");
+  const newFirstNameInput = document.getElementById("newFirstName");
+  const newLastNameInput = document.getElementById("newLastName");
+  const newRoleSelect = document.getElementById("newRole");
+  const createUserBtn = document.getElementById("createUserBtn");
 
   const editBusesList = document.getElementById("editBusesList");
   const editStationsList = document.getElementById("editStationsList");
@@ -55,6 +61,65 @@ window.addEventListener("DOMContentLoaded", async () => {
   renderStations();
   resetBusForm();
   resetStationForm();
+
+function setupCreateUser() {
+    if (!createUserBtn) return;
+
+    createUserBtn.addEventListener("click", async () => {
+      const username = newUsernameInput?.value.trim();
+      const password = newPasswordInput?.value;
+      const firstName = newFirstNameInput?.value.trim();
+      const lastName = newLastNameInput?.value.trim();
+      const role = newRoleSelect?.value || "user";
+
+      const nameRegex = /^[a-zA-Z\s\-']+$/;
+      const maxLength = 15;
+
+      if (!username || !password || !firstName || !lastName) {
+        alert("Please enter both username and password.");
+        return;
+      }
+
+      if (username.length > maxLength || firstName.length > maxLength || lastName.length > maxLength) {
+        alert(`Username, first name, and last name must be ${maxLength} characters or less.`);
+        return;
+      }
+
+      if (!nameRegex.test(firstName) || !nameRegex.test(lastName)) {
+        alert("Names can only contain letters, spaces, hyphens, and apostrophes.");
+        return;
+      }
+
+      createUserBtn.disabled = true;
+      createUserBtn.textContent = "Creating user...";
+
+      try {
+        const newUserProfile = await App.authService.signUp(
+          username,
+          password,
+          role,
+          firstName,
+          lastName
+        );
+
+        await App.accountManager.addUserProfile(newUserProfile);
+
+        newUsernameInput.value = "";
+        newPasswordInput.value = "";
+        newFirstNameInput.value = "";
+        newLastNameInput.value = "";
+        newRoleSelect.value = "user";
+
+        alert(`Created user ${username} successfully.`);
+      } catch (error) {
+        console.error("Failed to create user:", error);
+        alert("Could not create user. Please check the username and try again.");
+      } finally {
+        createUserBtn.disabled = false;
+        createUserBtn.textContent = "Create User";
+      }
+    });
+  }
 
   function setupNavigation() {
     if (backToAdminBtn) {

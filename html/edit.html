@@ -23,6 +23,22 @@
         <main class="edit-layout">
             <h1>Edit Data</h1>
 
+            <h2>Create New User</h2>
+                    <div class="form-section">
+                        <input id="newUsername" type="text" placeholder="Username" maxlength="15" />
+                        <input id="newPassword" type="password" placeholder="Password" />
+                        <input id="newFirstName" type="text" placeholder="First Name" maxlength="15" />
+                        <input id="newLastName" type="text" placeholder="Last Name" maxlength="15" />
+                        <select id="newRole">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+
+                    <div class="edit-form-actions">
+                        <button id="createUserBtn" type="button">Create User</button>
+                     </div>
+                </div>
+
             <div class="edit-actions">
                 <button id="backToAdminBtn" type="button">Back to Admin</button>
                 <button id="goAboutBtn" type="button">About</button>
