@@ -87,31 +87,15 @@ export const App = {
 
     const existingStations = this.stationManager.getAllStations();
 
-    const plannedStations = [
-      {
-        name: "Campus North Stop",
-        latitude: 33.59342,
-        longitude: -81.766009,
-        type: "Bus Station"
-      },
-      {
-        name: "Campus South Stop",
-        latitude: 33.55342,
-        longitude: -81.766009,
-        type: "Bus Station"
-      },
-      {
-        name: "Campus East Refuel",
-        latitude: 33.57342,
-        longitude: -81.746009,
-        fuelType: "Diesel"
-      },
-      {
-        name: "Campus West Refuel",
-        latitude: 33.57342,
-        longitude: -81.786009,
-        fuelType: "Gasoline"
+    // Remove specific unwanted stations
+    const stationsToRemove = ["Campus North Stop", "Campus East Refuel", "Campus West Refuel", "Campus South Stop"];
+    for (const station of [...existingStations]) {
+      if (stationsToRemove.includes(station.name)) {
+        await this.stationManager.removeStation(station.getID());
       }
+    }
+
+    const plannedStations = [
     ];
 
     const plannedNames = plannedStations.map((station) => station.name);

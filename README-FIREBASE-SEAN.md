@@ -343,3 +343,30 @@ The main goal is to replace prototype persistence/auth layers with Firebase whil
 # New tasks (4/15/26)
 Update the pages with necessary fixes and logic (you're mostly done just make sure it all flows well) and finish the artwork for
 the logo.
+
+# New tasks (4/20/26)
+- Fix the "Add Bus" form that appends to Firebase to ONLY allow the following constrictions:
+    - Bus Type: "Shuttle"
+        - Fuel Type: Gasoline
+            - Fuel Tank Size: between 25-50 gallons 
+            - Fuel Burn Rate: between 6-12 miles per gallon 
+            - Cruise Speed: between 30-45 miles per hour
+        - Fuel Type: Diesel
+            - Fuel Tank Size: between 35-60 gallons 
+            - Fuel Burn Rate: between 8-14 miles per gallon 
+            - Cruise Speed: between 35-45 miles per hour
+    - Bus Type: "Coach"
+        - Fuel Type: Gasoline
+            - Fuel Tank Size: between 192-250 gallons 
+            - Fuel Burn Rate: between 2-5 miles per gallon 
+            - Cruise Speed: between 80-90 miles per hour
+        - Fuel Type: Diesel
+            - Fuel Tank Size: between 250-300 gallons 
+            - Fuel Burn Rate: between 2-5 miles per gallon 
+            - Cruise Speed: between 90-110 miles per hour
+- Change the "Add Station" form with the following:
+    - Remove "Station Type" and "Fuel Type" input boxes. We already have the initial "Bus Station" or "Refuel Station" choice at the top of the form, so there's no need for the bottom one for "Station Type" or the "Fuel Type" one when clicking "Edit" on a station item on the edit.html page
+
+*PHEW* I know that was a lot buddy, sorry lol :(, but just do what you already did for the Make and Model parameters, but THIS time have and extra input box for each value with listeners to check for user input that exceeds or falls under the necessary values (i.e. don't let the user input values that don't make sense)
+
+Godspeed soldier o7.

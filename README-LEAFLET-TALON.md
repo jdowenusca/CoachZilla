@@ -262,3 +262,8 @@ Focus on improving accuracy without disrupting the existing system flow. The Rou
 
 # New Tasks (4/15/26)
 Add parameters/limiters to the "Add Buses" and "Add Stations" forms so that the calculations remain realistic.
+
+# New Tasks (4/20/26)
+- Fix the math calculations for time to match this scheme (XX:YY) where XX is the number of hours, and YY is the number of minutes (bearing in mind that minutes cannot excede 60).
+
+- Add functionality to the calculation that checks if a refuel is needed, and prevent a travel plan from being made until a refuel station is selected on that route. Once that's done, the calculation should continue as normal. (or just add prompt if its already there lol)

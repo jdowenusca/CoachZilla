@@ -144,3 +144,10 @@ All design and debugging efforts were made with the intent of delivering a stabl
 
 # New tasks (4/15/26)
 Ensure new project updates are seamless with the rest of the project and update design elements to reflect the new design.
+
+# New tasks (4/20/26)
+- Fix the "Create New User" form in edit.html to match the style of the "Add Bus" and "Add Station" forms (hugging the left side) and have a "Current Users" list to the right of this new form.
+
+- Fix edit.html and admin.html designs.
+
+- Add disclaimer page that loads on top of the index.html page.
