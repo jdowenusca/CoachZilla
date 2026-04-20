@@ -267,3 +267,5 @@ Add parameters/limiters to the "Add Buses" and "Add Stations" forms so that the 
 - Fix the math calculations for time to match this scheme (XX:YY) where XX is the number of hours, and YY is the number of minutes (bearing in mind that minutes cannot excede 60).
 
 - Add functionality to the calculation that checks if a refuel is needed, and prevent a travel plan from being made until a refuel station is selected on that route. Once that's done, the calculation should continue as normal. (or just add prompt if its already there lol)
+
+- Make sure the when the caluclation happens that it's pulling from the specific travel plan, not a large array of numbers. (i.e. make sure the calculation is being done on the current travel plan, not a random travel plan in the database)

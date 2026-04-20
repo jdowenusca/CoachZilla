@@ -48,4 +48,13 @@ window.addEventListener("DOMContentLoaded", async () => {
       window.location.href = "about.html";
     });
   }
+
+  // Disclaimer modal close
+  const closeDisclaimerBtn = document.getElementById("closeDisclaimer");
+  if (closeDisclaimerBtn) {
+    closeDisclaimerBtn.addEventListener("click", () => {
+      const modal = document.getElementById("disclaimerModal");
+      modal.classList.add("hidden");
+    });
+  }
 });

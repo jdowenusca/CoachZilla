@@ -23,8 +23,19 @@
         <main class="edit-layout">
             <h1>Edit Data</h1>
 
-            <h2>Create New User</h2>
+            <div class="edit-actions">
+                <button id="backToAdminBtn" type="button">Back to Admin</button>
+                <button id="goAboutBtn" type="button">About</button>
+                <button id="logoutBtn" type="button">Logout</button>
+            </div>
+
+            <section class="edit-grid">
+                <div class="edit-column">
+
+                    <h2 id="userFormTitle">Create New User</h2>
                     <div class="form-section">
+                        <input type="hidden" id="editingUserId">
+
                         <input id="newUsername" type="text" placeholder="Username" maxlength="15" />
                         <input id="newPassword" type="password" placeholder="Password" />
                         <input id="newFirstName" type="text" placeholder="First Name" maxlength="15" />
@@ -35,18 +46,10 @@
                     </select>
 
                     <div class="edit-form-actions">
-                        <button id="createUserBtn" type="button">Create User</button>
+                        <button id="saveUserBtn" type="button">Create User</button>
+                        <button id="cancelUserEditBtn" type="button">Cancel Edit</button>
                      </div>
                 </div>
-
-            <div class="edit-actions">
-                <button id="backToAdminBtn" type="button">Back to Admin</button>
-                <button id="goAboutBtn" type="button">About</button>
-                <button id="logoutBtn" type="button">Logout</button>
-            </div>
-
-            <section class="edit-grid">
-                <div class="edit-column">
 
                     <h2 id="busFormTitle">Add Bus</h2>
                     <div class="form-section">
@@ -99,11 +102,14 @@
                 </div>
 
                 <div class="edit-column">
+                    <h2>Current Users</h2>
+                    <div id="editUsersList" class="scrollable-list"></div>
+
                     <h2>Current Buses</h2>
-                    <div id="editBusesList"></div>
+                    <div id="editBusesList" class="scrollable-list"></div>
 
                     <h2>Current Stations</h2>
-                    <div id="editStationsList"></div>
+                    <div id="editStationsList" class="scrollable-list"></div>
                 </div>
             </section>
         </main>

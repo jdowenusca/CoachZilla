@@ -100,14 +100,13 @@ async initialize() {
     return this.userProfile;
   }
 
-  async signUp(username, password, role = "user", firstName = "", lastName = "") {
+  async signUp(username, password, role = "user", firstName = "", lastName = "", signIn = true) {
     const email = this.usernameToEmail(username);
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    this.user = userCredential.user;
-
+    
     const profile = {
-      uid: this.user.uid,
-      userID: this.user.uid,
+      uid: userCredential.user.uid,
+      userID: userCredential.user.uid,
       username,
       firstName,
       lastName,
@@ -116,9 +115,17 @@ async initialize() {
       updatedAt: new Date().toISOString()
     };
 
-    await setDoc(doc(firestore, "users", this.user.uid), profile);
-    this.userProfile = profile;
-    return this.userProfile;
+    await setDoc(doc(firestore, "users", userCredential.user.uid), profile);
+    
+    if (signIn) {
+      this.user = userCredential.user;
+      this.userProfile = profile;
+    } else {
+      // Sign out the newly created user to keep the admin signed in
+      await firebaseSignOut(auth);
+    }
+    
+    return profile;
   }
 
   async signOut() {

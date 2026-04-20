@@ -50,22 +50,29 @@ window.addEventListener("DOMContentLoaded", async () => {
   const newFirstNameInput = document.getElementById("newFirstName");
   const newLastNameInput = document.getElementById("newLastName");
   const newRoleSelect = document.getElementById("newRole");
-  const createUserBtn = document.getElementById("createUserBtn");
+  const saveUserBtn = document.getElementById("saveUserBtn");
+  const cancelUserEditBtn = document.getElementById("cancelUserEditBtn");
+  const userFormTitle = document.getElementById("userFormTitle");
+  const editingUserId = document.getElementById("editingUserId");
 
   const editBusesList = document.getElementById("editBusesList");
   const editStationsList = document.getElementById("editStationsList");
+  const editUsersList = document.getElementById("editUsersList");
 
   setupNavigation();
   setupForms();
+  setupUserForm();
   renderBuses();
   renderStations();
+  renderUsers();
   resetBusForm();
   resetStationForm();
+  resetUserForm();
 
-function setupCreateUser() {
-    if (!createUserBtn) return;
+function setupUserForm() {
+    if (!saveUserBtn) return;
 
-    createUserBtn.addEventListener("click", async () => {
+    saveUserBtn.addEventListener("click", async () => {
       const username = newUsernameInput?.value.trim();
       const password = newPasswordInput?.value;
       const firstName = newFirstNameInput?.value.trim();
@@ -75,8 +82,10 @@ function setupCreateUser() {
       const nameRegex = /^[a-zA-Z\s\-']+$/;
       const maxLength = 15;
 
-      if (!username || !password || !firstName || !lastName) {
-        alert("Please enter both username and password.");
+      const existingUserId = editingUserId.value.trim();
+
+      if (!username || !firstName || !lastName) {
+        alert("Please enter username, first name, and last name.");
         return;
       }
 
@@ -90,35 +99,76 @@ function setupCreateUser() {
         return;
       }
 
-      createUserBtn.disabled = true;
-      createUserBtn.textContent = "Creating user...";
+      if (!existingUserId && !password) {
+        alert("Please enter a password for new user.");
+        return;
+      }
+
+      saveUserBtn.disabled = true;
+      saveUserBtn.textContent = existingUserId ? "Updating user..." : "Creating user...";
 
       try {
-        const newUserProfile = await App.authService.signUp(
-          username,
-          password,
-          role,
-          firstName,
-          lastName
-        );
+        if (existingUserId) {
+          // Update existing user
+          const user = App.accountManager.findUserByID(existingUserId);
+          if (!user) {
+            alert("User not found.");
+            return;
+          }
 
-        await App.accountManager.addUserProfile(newUserProfile);
+          if (username !== user.username) {
+            const existing = App.accountManager.findUserByUsername(username);
+            if (existing) {
+              alert("Username already taken.");
+              return;
+            }
+          }
 
-        newUsernameInput.value = "";
-        newPasswordInput.value = "";
-        newFirstNameInput.value = "";
-        newLastNameInput.value = "";
-        newRoleSelect.value = "user";
+          const updatedUser = await App.accountManager.updateUser(existingUserId, {
+            username,
+            firstName,
+            lastName,
+            role,
+            ...(password && { password }) // Only update password if provided
+          });
+
+          if (!updatedUser) {
+            alert("Failed to update user.");
+            return;
+          }
+
+          alert(`Updated user ${username} successfully.`);
+        } else {
+          const newUserProfile = await App.authService.signUp(
+            username,
+            password,
+            role,
+            firstName,
+            lastName,
+            false
+          );
+
+          await App.accountManager.addUserProfile(newUserProfile);
+
+          alert(`Created user ${username} successfully.`);
+        }
 
         alert(`Created user ${username} successfully.`);
+
+        resetUserForm();
+        renderUsers();
       } catch (error) {
         console.error("Failed to create user:", error);
         alert("Could not create user. Please check the username and try again.");
       } finally {
-        createUserBtn.disabled = false;
-        createUserBtn.textContent = "Create User";
+        saveUserBtn.disabled = false;
+        saveUserBtn.textContent = existingUserId ? "Update User" : "Create User";
       }
     });
+
+    if (cancelUserEditBtn) {
+      cancelUserEditBtn.addEventListener("click", resetUserForm);
+    }
   }
 
   function setupNavigation() {
@@ -403,6 +453,45 @@ function setupCreateUser() {
     });
   }
 
+  function renderUsers() {
+    if (!editUsersList) return;
+
+    const users = App.accountManager.getAllUsers();
+
+    if (!users || users.length === 0) {
+      editUsersList.innerHTML = "<p>No users available.</p>";
+      return;
+    }
+
+    editUsersList.innerHTML = users.map((user) => `
+      <div class="admin-card">
+        <p><strong>ID:</strong> ${user.userID ?? "N/A"}</p>
+        <p><strong>Username:</strong> ${user.username || "N/A"}</p>
+        <p><strong>First Name:</strong> ${user.firstName || "N/A"}</p>
+        <p><strong>Last Name:</strong> ${user.lastName || "N/A"}</p>
+        <p><strong>Role:</strong> ${user.role || "N/A"}</p>
+        <div class="card-action-row">
+          <button class="edit-user-btn" data-user-id="${user.userID}" type="button">Edit</button>
+          <button class="delete-user-btn" data-user-id="${user.userID}" type="button">Delete</button>
+        </div>
+      </div>
+    `).join("");
+
+    document.querySelectorAll(".edit-user-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        const userId = button.dataset.userId;
+        startUserEdit(userId);
+      });
+    });
+
+    document.querySelectorAll(".delete-user-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        const userId = button.dataset.userId;
+        deleteUser(userId);
+      });
+    });
+  }
+
   function startBusEdit(busId) {
     const bus = App.busManager.findBusByID(busId);
 
@@ -531,6 +620,57 @@ function setupCreateUser() {
 
     stationFormTitle.textContent = "Add Station";
     saveStationBtn.textContent = "Save Station";
+  }
+
+  function startUserEdit(userId) {
+    const user = App.accountManager.findUserByID(userId);
+
+    if (!user) {
+      alert("User not found.");
+      return;
+    }
+
+    editingUserId.value = user.userID;
+    newUsernameInput.value = user.username || "";
+    newPasswordInput.value = ""; // Don't populate password for security
+    newFirstNameInput.value = user.firstName || "";
+    newLastNameInput.value = user.lastName || "";
+    newRoleSelect.value = user.role || "user";
+
+    userFormTitle.textContent = `Edit User #${user.userID}`;
+    saveUserBtn.textContent = "Update User";
+  }
+
+  async function deleteUser(userId) {
+    const confirmed = confirm("Delete this user?");
+    if (!confirmed) return;
+
+    const deleted = await App.accountManager.removeUser(userId);
+
+    if (!deleted) {
+      alert("Failed to delete user.");
+      return;
+    }
+
+    if (editingUserId.value === String(userId)) {
+      resetUserForm();
+    }
+
+    renderUsers();
+    alert("User deleted successfully.");
+  }
+
+  function resetUserForm() {
+    editingUserId.value = "";
+    newUsernameInput.value = "";
+    newPasswordInput.value = "";
+    newFirstNameInput.value = "";
+
+    newLastNameInput.value = "";
+    newRoleSelect.value = "user";
+
+    userFormTitle.textContent = "Create New User";
+    saveUserBtn.textContent = "Create User";
   }
 
   function updateBusModelField() {
