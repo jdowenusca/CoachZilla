@@ -147,6 +147,7 @@ export default class RoutePlanner {
     isCompatibleRefuelStation(bus, station) {
         if (!bus || !station) return false;
         if (!this.isRefuelStation(station)) return false;
+        if (!station.fuelType || String(station.fuelType).toLowerCase() === "any") return true;
         return String(bus.fuelType).toLowerCase() === String(station.fuelType).toLowerCase();
     }
 

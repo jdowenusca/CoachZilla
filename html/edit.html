@@ -67,11 +67,19 @@
                             <option value="Econoline E-350">Econoline E-350</option>
                             <option value="Transit E-350">Transit E-350</option>
                         </select>
-                        <input type="text" id="busType" placeholder="Type">
-                        <input type="text" id="busFuelType" placeholder="Fuel Type">
+                        <select id="busType">
+                            <option value="" disabled selected>Select Bus Type</option>
+                            <option value="Shuttle">Shuttle</option>
+                            <option value="Coach">Coach</option>
+                        </select>
+                        <select id="busFuelType">
+                            <option value="" disabled selected>Select Fuel Type</option>
+                            <option value="Gasoline">Gasoline</option>
+                            <option value="Diesel">Diesel</option>
+                        </select>
                         <input type="number" id="busFuelTankSize" placeholder="Fuel Tank Size (Gal)" min="10" max="300">
                         <input type="number" id="busFuelBurnRate" placeholder="Fuel Burn Rate (MPG)" min="1" max="50">
-                        <input type="number" id="busCruiseSpeed" placeholder="Cruise Speed (MPH)" min="5" max="85">
+                        <input type="number" id="busCruiseSpeed" placeholder="Cruise Speed (MPH)" min="5" max="110">
 
                         <div class="edit-form-actions">
                             <button id="saveBusBtn" type="button">Save Bus</button>
@@ -91,8 +99,6 @@
                         <input type="text" id="stationName" placeholder="Station Name">
                         <input type="number" step="any" id="stationLatitude" placeholder="Latitude (-90 to 90)" min="-90" max="90">
                         <input type="number" step="any" id="stationLongitude" placeholder="Longitude (-180 to 180)" min="-180" max="180">
-                        <input type="text" id="stationExtraField" placeholder="Station Type">
-
                         <div class="edit-form-actions">
                             <button id="saveStationBtn" type="button">Save Station</button>
                             <button id="cancelStationEditBtn" type="button">Cancel Edit</button>

@@ -348,22 +348,25 @@ the logo.
 - Fix the "Add Bus" form that appends to Firebase to ONLY allow the following constrictions:
     - Bus Type: "Shuttle"
         - Fuel Type: Gasoline
-            - Fuel Tank Size: between 25-50 gallons 
-            - Fuel Burn Rate: between 6-12 miles per gallon 
-            - Cruise Speed: between 30-45 miles per hour
-        - Fuel Type: Diesel
-            - Fuel Tank Size: between 35-60 gallons 
-            - Fuel Burn Rate: between 8-14 miles per gallon 
-            - Cruise Speed: between 35-45 miles per hour
+            - Fuel Tank Size: between 25-50 gallons ✅
+            - Fuel Burn Rate: between 6-12 miles per gallon✅ 
+            - Cruise Speed: between 30-45 miles per hour✅
+        - Fuel Type: Diesel✅
+            - Fuel Tank Size: between 35-60 gallons ✅ 
+            - Fuel Burn Rate: between 8-14 miles per gallon ✅ 
+            - Cruise Speed: between 35-45 miles per hour✅
     - Bus Type: "Coach"
-        - Fuel Type: Gasoline
-            - Fuel Tank Size: between 192-250 gallons 
-            - Fuel Burn Rate: between 2-5 miles per gallon 
+        - Fuel Type: Gasoline✅
+            - Fuel Tank Size: between 192-250 gallons ✅
+            - Fuel Burn Rate: between 2-5 miles per gallon✅ 
             - Cruise Speed: between 80-90 miles per hour
-        - Fuel Type: Diesel
-            - Fuel Tank Size: between 250-300 gallons 
-            - Fuel Burn Rate: between 2-5 miles per gallon 
+                - I edited this so it is within legal speed limits so now it is between 50-60 mph✅
+        - Fuel Type: Diesel✅
+            - Fuel Tank Size: between 250-300 gallons ✅
+            - Fuel Burn Rate: between 2-5 miles per gallon ✅
             - Cruise Speed: between 90-110 miles per hour
+                - I edited this so it is within legal speed limits so now it is between 60-70 mph✅
+
 - Change the "Add Station" form with the following:
     - Remove "Station Type" and "Fuel Type" input boxes. We already have the initial "Bus Station" or "Refuel Station" choice at the top of the form, so there's no need for the bottom one for "Station Type" or the "Fuel Type" one when clicking "Edit" on a station item on the edit.html page
 

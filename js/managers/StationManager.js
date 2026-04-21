@@ -75,7 +75,7 @@ export default class StationManager {
     return newStation;
   }
 
-  async addRefuelStation(name, latitude, longitude, fuelType) {
+  async addRefuelStation(name, latitude, longitude, fuelType = "Any") {
     const newStation = new RefuelStation(
       this.generateStationID(),
       name,
@@ -169,6 +169,8 @@ export default class StationManager {
 
     if (updatedFields.fuelType !== undefined) {
       station.setFuelType(updatedFields.fuelType);
+    } else if (!station.fuelType) {
+      station.setFuelType("Any");
     }
 
     await this.saveStation(station);

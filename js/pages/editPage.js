@@ -42,7 +42,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   const stationName = document.getElementById("stationName");
   const stationLatitude = document.getElementById("stationLatitude");
   const stationLongitude = document.getElementById("stationLongitude");
-  const stationExtraField = document.getElementById("stationExtraField");
   const saveStationBtn = document.getElementById("saveStationBtn");
   const cancelStationEditBtn = document.getElementById("cancelStationEditBtn");
   const newUsernameInput = document.getElementById("newUsername");
@@ -58,6 +57,33 @@ window.addEventListener("DOMContentLoaded", async () => {
   const editBusesList = document.getElementById("editBusesList");
   const editStationsList = document.getElementById("editStationsList");
   const editUsersList = document.getElementById("editUsersList");
+
+  const BUS_CONSTRAINTS = {
+    Shuttle: {
+      Gasoline: {
+        fuelTankSize: { min: 25, max: 50 },
+        fuelBurnRate: { min: 6, max: 12 },
+        cruiseSpeed: { min: 30, max: 45 }
+      },
+      Diesel: {
+        fuelTankSize: { min: 35, max: 60 },
+        fuelBurnRate: { min: 8, max: 14 },
+        cruiseSpeed: { min: 35, max: 45 }
+      }
+    },
+    Coach: {
+      Gasoline: {
+        fuelTankSize: { min: 192, max: 250 },
+        fuelBurnRate: { min: 2, max: 5 },
+        cruiseSpeed: { min: 50, max: 60 }
+      },
+      Diesel: {
+        fuelTankSize: { min: 250, max: 300 },
+        fuelBurnRate: { min: 2, max: 5 },
+        cruiseSpeed: { min: 60, max: 70 }
+      }
+    }
+  };
 
   setupNavigation();
   setupForms();
@@ -194,12 +220,16 @@ function setupUserForm() {
   }
 
   function setupForms() {
-    if (stationMode) {
-      stationMode.addEventListener("change", updateStationExtraFieldLabel);
-    }
-
     if (busMake) {
       busMake.addEventListener("change", updateBusModelField);
+    }
+
+    if (busType) {
+      busType.addEventListener("change", updateBusConstraintLabels);
+    }
+
+    if (busFuelType) {
+      busFuelType.addEventListener("change", updateBusConstraintLabels);
     }
 
     if (saveBusBtn) {
@@ -218,8 +248,8 @@ function setupUserForm() {
       cancelStationEditBtn.addEventListener("click", resetStationForm);
     }
 
-    updateStationExtraFieldLabel();
     updateBusModelField();
+    updateBusConstraintLabels();
   }
 
   async function handleSaveBus() {
@@ -232,6 +262,7 @@ function setupUserForm() {
     const fuelTankSize = Number(busFuelTankSize.value);
     const fuelBurnRate = Number(busFuelBurnRate.value);
     const cruiseSpeed = Number(busCruiseSpeed.value);
+    const constraints = getBusConstraints(type, fuelType);
 
     if (
       !make ||
@@ -246,18 +277,23 @@ function setupUserForm() {
       return;
     }
 
-    if (fuelTankSize < 10 || fuelTankSize > 300) {
-      alert("enter a fuel size (10 - 300 gallons)");
+    if (!constraints) {
+      alert("Please choose a valid bus type and fuel type combination.");
       return;
     }
-    
-    if (fuelBurnRate < 1 || fuelBurnRate > 50) {
-      alert("enter burn rate (1 - 50 MPG)");
+
+    if (!isValueWithinRange(fuelTankSize, constraints.fuelTankSize)) {
+      alert(`Fuel tank size for a ${type} ${fuelType} bus must be between ${constraints.fuelTankSize.min} and ${constraints.fuelTankSize.max} gallons.`);
       return;
     }
-    
-    if (cruiseSpeed < 5 || cruiseSpeed > 85) {
-      alert("enter cruise speed (5 - 85 MPH)");
+
+    if (!isValueWithinRange(fuelBurnRate, constraints.fuelBurnRate)) {
+      alert(`Fuel burn rate for a ${type} ${fuelType} bus must be between ${constraints.fuelBurnRate.min} and ${constraints.fuelBurnRate.max} MPG.`);
+      return;
+    }
+
+    if (!isValueWithinRange(cruiseSpeed, constraints.cruiseSpeed)) {
+      alert(`Cruise speed for a ${type} ${fuelType} bus must be between ${constraints.cruiseSpeed.min} and ${constraints.cruiseSpeed.max} MPH.`);
       return;
     }
 
@@ -303,13 +339,11 @@ function setupUserForm() {
     const name = stationName.value.trim();
     const latitude = Number(stationLatitude.value);
     const longitude = Number(stationLongitude.value);
-    const extraValue = stationExtraField.value.trim();
 
     if (
       !name ||
       Number.isNaN(latitude) ||
-      Number.isNaN(longitude) ||
-      !extraValue
+      Number.isNaN(longitude)
     ) {
       alert("Please fill in all station fields correctly.");
       return;
@@ -334,29 +368,27 @@ function setupUserForm() {
         updatedStation = await App.stationManager.updateBusStation(existingStationId, {
           name,
           latitude,
-          longitude,
-          stationType: extraValue
+          longitude
         });
       } else {
         updatedStation = await App.stationManager.updateRefuelStation(existingStationId, {
           name,
           latitude,
-          longitude,
-          fuelType: extraValue
+          longitude
         });
       }
 
       if (!updatedStation) {
-        alert("Failed to update station. Make sure the station type matches the selected mode.");
+        alert("Failed to update station. Make sure the station mode matches the selected station.");
         return;
       }
 
       alert("Station updated successfully.");
     } else {
       if (mode === "bus") {
-        await App.stationManager.addBusStation(name, latitude, longitude, extraValue);
+        await App.stationManager.addBusStation(name, latitude, longitude);
       } else {
-        await App.stationManager.addRefuelStation(name, latitude, longitude, extraValue);
+        await App.stationManager.addRefuelStation(name, latitude, longitude);
       }
 
       alert("Station added successfully.");
@@ -420,7 +452,6 @@ function setupUserForm() {
 
     editStationsList.innerHTML = stations.map((station) => {
       const isRefuel = station.fuelType !== undefined;
-      const typeLabel = isRefuel ? `Fuel Type: ${station.fuelType}` : `Station Type: ${station.stationType}`;
 
       return `
         <div class="admin-card">
@@ -429,7 +460,6 @@ function setupUserForm() {
           <p><strong>Latitude:</strong> ${station.latitude ?? "N/A"}</p>
           <p><strong>Longitude:</strong> ${station.longitude ?? "N/A"}</p>
           <p><strong>${isRefuel ? "Refuel Station" : "Bus Station"}</strong></p>
-          <p><strong>${typeLabel}</strong></p>
           <div class="card-action-row">
             <button class="edit-station-btn" data-station-id="${station.id}" type="button">Edit</button>
             <button class="delete-station-btn" data-station-id="${station.id}" type="button">Delete</button>
@@ -517,10 +547,11 @@ function setupUserForm() {
       busModelText.value = bus.model || "";
     }
     busType.value = bus.type || "";
-    busFuelType.value = bus.make === "Prevost" ? "Diesel" : (bus.fuelType || "");
+    busFuelType.value = bus.fuelType || "";
     busFuelTankSize.value = bus.fuelTankSize ?? "";
     busFuelBurnRate.value = bus.fuelBurnRate ?? "";
     busCruiseSpeed.value = bus.cruiseSpeed ?? "";
+    updateBusConstraintLabels();
 
     busFormTitle.textContent = `Edit Bus #${bus.id}`;
     saveBusBtn.textContent = "Update Bus";
@@ -541,11 +572,6 @@ function setupUserForm() {
     stationName.value = station.name || "";
     stationLatitude.value = station.latitude ?? "";
     stationLongitude.value = station.longitude ?? "";
-    stationExtraField.value = isRefuel
-      ? station.fuelType || ""
-      : station.stationType || "";
-
-    updateStationExtraFieldLabel();
 
     stationFormTitle.textContent = `Edit Station #${station.id}`;
     saveStationBtn.textContent = "Update Station";
@@ -603,6 +629,7 @@ function setupUserForm() {
     busFuelTankSize.value = "";
     busFuelBurnRate.value = "";
     busCruiseSpeed.value = "";
+    updateBusConstraintLabels();
 
     busFormTitle.textContent = "Add Bus";
     saveBusBtn.textContent = "Save Bus";
@@ -614,9 +641,6 @@ function setupUserForm() {
     stationName.value = "";
     stationLatitude.value = "";
     stationLongitude.value = "";
-    stationExtraField.value = "";
-
-    updateStationExtraFieldLabel();
 
     stationFormTitle.textContent = "Add Station";
     saveStationBtn.textContent = "Save Station";
@@ -681,11 +705,6 @@ function setupUserForm() {
       busModelText.disabled = true;
       updateBusModelOptions();
       busModelSelect.value = "";
-      if (busMake.value === "Prevost") {
-        busFuelType.value = "Diesel";
-      } else if (busMake.value === "Ford") {
-        busFuelType.value = "Gasoline";
-      }
     } else {
       busModelSelect.hidden = true;
       busModelSelect.disabled = true;
@@ -710,11 +729,42 @@ function setupUserForm() {
       models.map((model) => `<option value="${model}">${model}</option>`).join("");
   }
 
-  function updateStationExtraFieldLabel() {
-    if (stationMode.value === "refuel") {
-      stationExtraField.placeholder = "Fuel Type";
-    } else {
-      stationExtraField.placeholder = "Station Type";
+  function getBusConstraints(type, fuelType) {
+    return BUS_CONSTRAINTS[type]?.[fuelType] || null;
+  }
+
+  function isValueWithinRange(value, range) {
+    return value >= range.min && value <= range.max;
+  }
+
+  function updateBusConstraintLabels() {
+    const constraints = getBusConstraints(busType.value, busFuelType.value);
+
+    if (!constraints) {
+      busFuelTankSize.min = 25;
+      busFuelTankSize.max = 300;
+      busFuelTankSize.placeholder = "Fuel Tank Size (Gal)";
+
+      busFuelBurnRate.min = 2;
+      busFuelBurnRate.max = 14;
+      busFuelBurnRate.placeholder = "Fuel Burn Rate (MPG)";
+
+      busCruiseSpeed.min = 30;
+      busCruiseSpeed.max = 110;
+      busCruiseSpeed.placeholder = "Cruise Speed (MPH)";
+      return;
     }
+
+    busFuelTankSize.min = constraints.fuelTankSize.min;
+    busFuelTankSize.max = constraints.fuelTankSize.max;
+    busFuelTankSize.placeholder = `Fuel Tank Size (${constraints.fuelTankSize.min}-${constraints.fuelTankSize.max} Gal)`;
+
+    busFuelBurnRate.min = constraints.fuelBurnRate.min;
+    busFuelBurnRate.max = constraints.fuelBurnRate.max;
+    busFuelBurnRate.placeholder = `Fuel Burn Rate (${constraints.fuelBurnRate.min}-${constraints.fuelBurnRate.max} MPG)`;
+
+    busCruiseSpeed.min = constraints.cruiseSpeed.min;
+    busCruiseSpeed.max = constraints.cruiseSpeed.max;
+    busCruiseSpeed.placeholder = `Cruise Speed (${constraints.cruiseSpeed.min}-${constraints.cruiseSpeed.max} MPH)`;
   }
 });
