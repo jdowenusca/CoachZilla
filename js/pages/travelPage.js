@@ -1,4 +1,5 @@
 import { App } from "../app/app.js";
+import { formatHoursToXXYY } from "../utils/helpers.js";
 
 window.addEventListener("DOMContentLoaded", async () => {
   await App.init();
@@ -137,7 +138,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         <p><strong>Status:</strong> ${formatStatus(plan.status)}</p>
         <p><strong>Bus:</strong> ${formatBus(bus, plan.selectedBusId)}</p>
         <p><strong>Total Distance:</strong> ${formatNumber(route.totalDistance)} miles</p>
-        <p><strong>Total Time:</strong> ${formatNumber(route.totalTime)} hrs</p>
+        <p><strong>Total Time:</strong> ${formatHoursToXXYY(route.totalTime)}</p>
         <p><strong>Stops Selected:</strong> ${selectedStations.length}</p>
         <p><strong>Created:</strong> ${formatDate(plan.createdAt)}</p>
         <p><strong>Updated:</strong> ${formatDate(plan.updatedAt)}</p>
@@ -195,7 +196,7 @@ window.addEventListener("DOMContentLoaded", async () => {
                   <p><strong>From:</strong> ${startName} (${startType})</p>
                   <p><strong>To:</strong> ${endName} (${endType})</p>
                   <p><strong>Distance:</strong> ${formatNumber(leg.distance)} miles</p>
-                  <p><strong>Time:</strong> ${formatNumber(leg.timeToDestination)} hours</p>
+                  <p><strong>Time:</strong> ${formatHoursToXXYY(leg.timeToDestination)}</p>
                   <p><strong>Heading:</strong> ${formatNumber(leg.heading)}°</p>
                   <p><strong>Refuel Stop:</strong> ${leg.isRefuelStop ? "Yes" : "No"}</p>
                 </div>

@@ -86,20 +86,18 @@ export default class RoutePlanner {
                 }
             }
         } catch (error) {
-            // Silently catch the timeout or CORS error without crashing
+
             console.warn("API overloaded or blocked. Using local city-traffic simulation.");
         }
 
-        // ============================================
-        // FAILSAFE: Local Realistic Traffic Simulator
-        // If the API fails, we calculate the straight line,
-        // add a 25% "curved roads" penalty, and assume 15 MPH city traffic.
-        // ============================================
         const straightLineMiles = this.calculateDistance(coord1, coord2);
+
         const realisticDistance = straightLineMiles * 1.25; 
-        const realisticTime = realisticDistance / 15; // 15 MPH average bus speed
-        
+
+        const realisticTime = 0; 
+
         return { distanceMiles: realisticDistance, timeHours: realisticTime };
+        
     }
 
     calculateHeading(coord1, coord2) {

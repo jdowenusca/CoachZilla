@@ -1,5 +1,5 @@
 import { App } from "../app/app.js";
-
+import { formatHoursToXXYY } from "../utils/helpers.js";
 window.addEventListener("DOMContentLoaded", async () => {
   await App.init();
 
@@ -267,7 +267,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             }</p>
             <p><strong>Stops:</strong> ${stopCount}</p>
             <p><strong>Total Distance:</strong> ${formatNumber(route.totalDistance)}</p>
-            <p><strong>Total Time:</strong> ${formatNumber(route.totalTime)}</p>
+            <p><strong>Total Time:</strong> ${formatHoursToXXYY(route.totalTime)}</p>
           </div>
         `;
       })

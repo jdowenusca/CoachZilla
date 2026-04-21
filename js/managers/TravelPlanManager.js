@@ -95,13 +95,13 @@ async savePlan(plan) {
         await this.firestoreService.deleteDocument(this.storageKey, planId);
     }
 
-    // --- OPTIONAL: REBUILD ROUTE ---
 
     async rebuildRoute(planId, bus, destinationIds, allStations) {
+
         const plan = this.getPlanById(planId);
         if (!plan) return null;
 
-        const newRoute = this.routePlanner.buildRoute(bus, destinationIds, allStations);
+        const newRoute = await this.routePlanner.buildRoute(bus, destinationIds, allStations);
 
         plan.route = newRoute;
         plan.destinations = destinationIds;

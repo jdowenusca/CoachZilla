@@ -58,3 +58,15 @@ export function readJson(key, fallback = []) {
 export function writeJson(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
+
+export function formatHoursToXXYY(hours = 0) {
+  const totalMinutes = Math.round(Number(hours || 0) * 60);
+  if (totalMinutes <= 0) return "00:00";
+  const wholeHours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  
+  const formattedHours = String(wholeHours).padStart(2, '0');
+  const formattedMinutes = String(minutes).padStart(2, '0');
+  
+  return `${formattedHours}:${formattedMinutes}`;
+}

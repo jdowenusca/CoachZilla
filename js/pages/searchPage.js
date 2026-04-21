@@ -119,7 +119,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         window.location.href = `travel.html?planId=${encodeURIComponent(activeTravelPlanId)}`;
       } catch (err) {
         console.error(err);
-        alert("Failed to create route.");
+        alert(`Failed to create route: ${err.message}`);
         isCreatingPlan = false;
         buildBtn.disabled = false;
         buildBtn.textContent = originalText;
