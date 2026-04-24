@@ -1,3 +1,4 @@
+// User data model used for account management and Firestore synchronization.
 export default class User {
   constructor(userID, username, password, role = "user", firstName = "", lastName = "") {
     this.userID = userID;

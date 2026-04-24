@@ -1,3 +1,4 @@
+// Map handling service for Leaflet marker rendering and route preview drawing.
 export default class LeafletMapService {
   constructor() {
     this.map = null;
@@ -25,7 +26,7 @@ export default class LeafletMapService {
   }
 
   // ============================================
-  // TALON - ADDED: Color-coded marker icons
+  // Color-coded marker icons based on selection and refuel status
   // Uses Leaflet color marker images hosted on GitHub.
   //
   // Color guide:
@@ -59,9 +60,7 @@ export default class LeafletMapService {
   }
 
   // ============================================
-  // TALON - UPDATED: renderStations
-  // Now accepts an optional routeOrderIds array
-  // to determine marker color based on role:
+  // Updated renderStations to support optional routeOrderIds and marker roles
   //   - First selected  → green  (Start)
   //   - Last selected   → red    (End)
   //   - Middle selected → blue   (Stop)
@@ -175,9 +174,8 @@ export default class LeafletMapService {
   }
 
   // ============================================
-  // TALON - UPDATED: drawPreviewRoute
-  // Now renders a styled blue polyline with
-  // visible weight and opacity.
+  // Updated drawPreviewRoute to render a styled blue polyline
+  // with visible weight and opacity.
   //
   // Pass the ordered array of selected stations
   // (not all stations) to draw only the route path.

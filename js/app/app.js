@@ -1,4 +1,4 @@
-// js/app/app.js
+// Application initialization and service wiring for CoachZilla.
 
 import AccountManager from "../managers/AccountManager.js";
 import BusManager from "../managers/BusManager.js";

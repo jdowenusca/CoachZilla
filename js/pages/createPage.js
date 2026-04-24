@@ -1,4 +1,4 @@
-// js/pages/createPage.js
+// Account creation page behavior and validation.
 
 import { App } from "../app/app.js";
 

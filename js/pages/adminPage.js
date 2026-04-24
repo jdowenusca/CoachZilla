@@ -1,3 +1,4 @@
+// Admin dashboard page behavior and user management.
 import { App } from "../app/app.js";
 import { formatHoursToXXYY } from "../utils/helpers.js";
 window.addEventListener("DOMContentLoaded", async () => {

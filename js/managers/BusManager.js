@@ -1,3 +1,4 @@
+// Manages bus inventory and Firestore operations for CoachZilla.
 import Bus from "../models/Bus.js";
 
 export default class BusManager {

@@ -1,3 +1,4 @@
+// Search page logic for station selection and route preview.
 import { App } from "../app/app.js";
 import LeafletMapService from "../services/LeafletMapService.js";
 

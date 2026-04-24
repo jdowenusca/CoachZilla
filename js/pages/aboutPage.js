@@ -1,4 +1,4 @@
-// js/pages/aboutPage.js
+// About page behavior and navigation handling.
 
 import { App } from "../app/app.js";
 

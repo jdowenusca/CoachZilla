@@ -1,4 +1,4 @@
-// js/pages/loginPage.js
+// Login page behavior and navigation handling.
 
 import { App } from "../app/app.js";
 

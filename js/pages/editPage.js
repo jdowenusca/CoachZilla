@@ -1,3 +1,4 @@
+// Admin edit page behavior and user record update handling.
 import { App } from "../app/app.js";
 
 window.addEventListener("DOMContentLoaded", async () => {

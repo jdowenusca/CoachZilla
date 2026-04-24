@@ -1,3 +1,4 @@
+// Bus station data model extension.
 import Station from "./Station.js";
 
 export default class BusStation extends Station {

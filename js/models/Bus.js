@@ -1,3 +1,4 @@
+// Bus data model.
 export default class Bus {
   constructor(
     id,

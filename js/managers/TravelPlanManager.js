@@ -1,3 +1,4 @@
+// Travel plan creation, storage, and route rebuild management.
 import TravelPlan from "../models/TravelPlan.js";
 import RoutePlanner from "./RoutePlanner.js";
 
@@ -42,7 +43,7 @@ async savePlan(plan) {
             throw new Error("Invalid travel plan input");
         }
 
-        // ADD 'await' HERE to wait for the OSRM road API to finish!
+        // Await the OSRM road API response to ensure route construction completes before saving
         const route = await this.routePlanner.buildRoute(bus, destinationIds, allStations);
 
         const newPlan = new TravelPlan(

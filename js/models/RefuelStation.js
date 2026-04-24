@@ -1,3 +1,4 @@
+// Refuel station data model extension.
 import Station from "./Station.js";
 
 export default class RefuelStation extends Station {

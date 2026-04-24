@@ -1,3 +1,4 @@
+// Station inventory management and Firestore synchronization.
 import BusStation from "../models/BusStation.js";
 import RefuelStation from "../models/RefuelStation.js";
 

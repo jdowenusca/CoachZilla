@@ -1,3 +1,4 @@
+// Travel plan data model linking users, buses, destinations, and route data.
 export default class TravelPlan {
     constructor(
         travelPlanId,

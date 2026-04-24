@@ -1,3 +1,4 @@
+// Authentication service wrapper for Firebase auth and user profile synchronization.
 import { auth, firestore } from "./FirebaseConfig.js";
 import {
   createUserWithEmailAndPassword,
@@ -38,8 +39,7 @@ async initialize() {
         console.error("Error during authentication state change:", error);
         this.userProfile = null;
       } finally {
-        // We use finally to ENSURE the promise always resolves, 
-        // even if Firebase throws an error. This prevents the buttons from breaking.
+        // Ensure auth state initialization resolves even if Firebase throws an error.
         if (!this.authStateReady) {
           this.authStateReady = true;
           this.resolveAuthState();
@@ -61,7 +61,7 @@ async initialize() {
       return { userID: uid, ...userDoc.data() };
     } catch (error) {
       console.error("Firestore permission denied or network error:", error);
-      // Return null instead of crashing the initialization
+      // Return null on failure to avoid initialization crash
       return null; 
     }
   }
@@ -81,7 +81,7 @@ async initialize() {
     this.userProfile = await this.fetchUserProfile(this.user.uid);
 
     if (!this.userProfile) {
-      // Create profile if it doesn't exist (for manually created users)
+      // Create user profile if absent for manually created accounts
       const profile = {
         uid: this.user.uid,
         userID: this.user.uid,
@@ -121,7 +121,7 @@ async initialize() {
       this.user = userCredential.user;
       this.userProfile = profile;
     } else {
-      // Sign out the newly created user to keep the admin signed in
+      // Sign out the created user to preserve the admin session
       await firebaseSignOut(auth);
     }
     

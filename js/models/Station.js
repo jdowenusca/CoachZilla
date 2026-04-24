@@ -1,3 +1,4 @@
+// Base station data model.
 export default class Station {
   constructor(id, name, latitude, longitude) {
     this.id = id;

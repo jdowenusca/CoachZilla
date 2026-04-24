@@ -1,3 +1,4 @@
+// Utility DOM and sanitization helpers used across pages.
 export function qs(selector, scope = document) {
   return scope.querySelector(selector);
 }

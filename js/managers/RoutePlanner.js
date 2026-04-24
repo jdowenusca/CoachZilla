@@ -1,4 +1,4 @@
-// js/managers/RoutePlanner.js
+// Route planning logic, including distance, timing, and refuel path calculations.
 
 import Route from "../models/Route.js";
 import Leg from "../models/Leg.js";
@@ -173,7 +173,7 @@ export default class RoutePlanner {
             const candidateCoords = this.getCoordinates(candidate);
             if (!candidateCoords) return;
 
-            // We use Haversine here for quick pathfinding checks to avoid spamming the API
+// Use Haversine for quick pathfinding checks when avoiding additional API requests
             const distanceToCandidate = this.calculateDistance(startCoords, candidateCoords);
             const distanceCandidateToEnd = this.calculateDistance(candidateCoords, endCoords);
 
@@ -197,7 +197,7 @@ export default class RoutePlanner {
         const startCoords = this.getCoordinates(startStation);
         const endCoords = this.getCoordinates(endStation);
 
-        // Fetch real road distance AND time!
+        // Fetch real road distance and travel time
         const { distanceMiles, timeHours } = await this.getRealRoadData(startCoords, endCoords);
         const heading = this.calculateHeading(startCoords, endCoords);
 

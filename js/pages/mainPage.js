@@ -1,4 +1,4 @@
-// js/pages/mainPage.js
+// Main dashboard page logic and map setup.
 
 import { App } from "../app/app.js";
 import LeafletMapService from "../services/LeafletMapService.js";

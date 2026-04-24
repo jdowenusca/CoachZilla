@@ -1,3 +1,4 @@
+// Firestore data access utilities for reading and writing CoachZilla documents.
 import { firestore } from "./FirebaseConfig.js";
 import {
   collection,

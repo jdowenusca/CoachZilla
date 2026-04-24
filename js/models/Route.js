@@ -1,3 +1,4 @@
+// Route summary data model containing legs, totals, and refuel stops.
 export default class Route {
     constructor(
         routeId = null,

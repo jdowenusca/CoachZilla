@@ -1,3 +1,4 @@
+// Route leg representation including distance and travel time.
 export default class Leg {
   constructor(
     startStation,

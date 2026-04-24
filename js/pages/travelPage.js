@@ -1,3 +1,4 @@
+// Travel plan page behavior, display, and route summary rendering.
 import { App } from "../app/app.js";
 import { formatHoursToXXYY } from "../utils/helpers.js";
 

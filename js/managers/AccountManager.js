@@ -1,3 +1,4 @@
+// Manages user accounts and profile data stored in Firestore.
 import User from "../models/User.js";
 
 export default class AccountManager {
@@ -127,7 +128,7 @@ getAllUsers() {
     return this.users;
   }
 
-  // Add this new method to fix the app.js crash
+  // Returns users filtered by role for initialization and lookup
   async getUsersByRole(role) {
     return this.users.filter(
       (user) => String(user.role).toLowerCase() === String(role).toLowerCase()
